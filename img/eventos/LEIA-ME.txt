@@ -1,0 +1,5 @@
+ARTES DO EVENTO EM DESTAQUE (página Eventos)
+
+Imagem horizontal, 1200 x 800 pixels, JPG, até uns 200 KB.
+Depois escreva o caminho no js/config.js, em EVENTO_DESTAQUE:
+  arte: "img/eventos/nome-da-arte.jpg"

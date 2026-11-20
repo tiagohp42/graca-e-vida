@@ -53,6 +53,14 @@
   function comum() {
     $$("[data-ano]").forEach(function (el) { el.textContent = new Date().getFullYear(); });
 
+    // Cards dos ministérios: se a foto não existir, fica o fundo dourado com o ícone
+    $$("img[data-min-foto]").forEach(function (img) {
+      var card = img.closest(".min-card");
+      var falhou = function () { img.remove(); card.classList.add("sem-foto"); };
+      img.addEventListener("error", falhou);
+      if (img.complete && img.naturalWidth === 0) falhou();
+    });
+
     // Menu do celular
     var gav = $("#gaveta"), abrir = $("[data-menu]");
     if (gav && abrir) {
@@ -207,15 +215,71 @@
   /* ---------- Página: Início ---------- */
   function inicio() {
     var el = $("[data-proximo-culto]");
-    if (!el) return;
-    var at = function () {
-      var now = new Date(), d = proxCulto(now);
-      var ini = new Date(now); ini.setHours(19, 0, 0, 0);
-      var fim = new Date(now); fim.setHours(21, 30, 0, 0);
-      if (now.getDay() === 0 && now >= ini && now <= fim) { el.innerHTML = 'acontecendo agora · <a href="' + ROOT + 'ao-vivo/">assista ao vivo</a>'; return; }
-      el.textContent = "domingo, " + d.getDate() + " " + MESES[d.getMonth()] + " · 19h (em " + falta(d - now) + ")";
-    };
-    at(); setInterval(at, 60000);
+    if (el) {
+      var at = function () {
+        var now = new Date(), d = proxCulto(now);
+        var ini = new Date(now); ini.setHours(19, 0, 0, 0);
+        var fim = new Date(now); fim.setHours(21, 30, 0, 0);
+        if (now.getDay() === 0 && now >= ini && now <= fim) { el.innerHTML = 'acontecendo agora · <a href="' + ROOT + 'ao-vivo/">assista ao vivo</a>'; return; }
+        el.textContent = "domingo, " + d.getDate() + " " + MESES[d.getMonth()] + " · 19h (em " + falta(d - now) + ")";
+      };
+      at(); setInterval(at, 60000);
+    }
+    celulas();
+    lideranca();
+  }
+
+  // Células: lista do config.js (CELULAS). Vazia = ficam os 3 cartões de apresentação.
+  function celulas() {
+    var box = $("[data-celulas]");
+    if (!box) return;
+    var lista = (C.CELULAS || []).filter(function (c) { return c && (c.bairro || c.dia); });
+    if (lista.length) {
+      box.className = "celulas lista-real";
+      box.innerHTML = lista.map(function (c) {
+        var det = [c.horario, c.lider ? "com " + c.lider : ""].filter(Boolean).join(" · ");
+        return '<li class="cel-item"><span class="dia">' + esc(c.dia || "") + '</span>' +
+          '<span class="bairro">' + esc(c.bairro || "Telêmaco Borba") + '</span>' +
+          (det ? '<span class="det">' + esc(det) + '</span>' : "") +
+          (c.publico ? '<span class="det">' + esc(c.publico) + '</span>' : "") + '</li>';
+      }).join("");
+      var nota = $("[data-celula-nota]");
+      if (nota) nota.textContent = "O endereço de cada célula é passado pela equipe, por segurança das famílias que recebem.";
+    }
+    var wa = String(C.WHATSAPP || "").replace(/\D/g, "");
+    var cta = $("[data-cta-celula]");
+    if (cta && wa.length >= 10) {
+      cta.href = "https://wa.me/" + wa + "?text=" + encodeURIComponent("Olá! Quero participar de uma célula da Graça e Vida. Moro no bairro: ");
+      cta.rel = "noopener";
+    }
+  }
+
+  // Liderança: lista do config.js (LIDERANCA). Sem foto = iniciais em dourado. Vazia = seção escondida.
+  function lideranca() {
+    var box = $("[data-lideranca]");
+    if (!box) return;
+    var lista = (C.LIDERANCA || []).filter(function (l) { return l && l.nome; });
+    if (!lista.length) { var sec = $("#lideranca"); if (sec) sec.hidden = true; return; }
+    box.innerHTML = lista.map(function (l) {
+      var partes = String(l.nome).trim().split(/\s+/);
+      var ini = (partes[0][0] + (partes.length > 1 ? partes[partes.length - 1][0] : "")).toUpperCase();
+      var foto = l.foto ? (/^https?:/.test(l.foto) ? l.foto : ROOT + String(l.foto).replace(/^\//, "")) : "";
+      return '<article class="lider">' +
+        (foto ? '<img class="foto-l" src="' + esc(foto) + '" alt="' + esc(l.nome) + '" width="92" height="92" loading="lazy" decoding="async" data-ini="' + esc(ini) + '">'
+              : '<span class="ini" aria-hidden="true">' + esc(ini) + '</span>') +
+        '<div><p class="nm">' + esc(l.nome) + '</p>' +
+        (l.funcao ? '<p class="fn">' + esc(l.funcao) + '</p>' : "") +
+        (l.frase ? '<p class="fr">“' + esc(l.frase) + '”</p>' : "") + '</div></article>';
+    }).join("");
+    // Foto que não carregar vira iniciais
+    $$("img.foto-l", box).forEach(function (img) {
+      var trocar = function () {
+        var s = document.createElement("span"); s.className = "ini"; s.setAttribute("aria-hidden", "true");
+        s.textContent = img.getAttribute("data-ini"); img.replaceWith(s);
+      };
+      img.addEventListener("error", trocar);
+      if (img.complete && img.naturalWidth === 0) trocar();
+    });
   }
 
   /* ---------- Página: Eventos ---------- */
@@ -381,6 +445,10 @@
       var alvo = document.getElementById(c.getAttribute("data-abre"));
       c.addEventListener("change", function () { alvo.hidden = !c.checked; });
     });
+    if (/[?&]quero=celula\b/.test(location.search)) {
+      var cb = $("input[name=celula]", form);
+      if (cb) cb.checked = true;
+    }
     var PASSOS = {
       visita: "Vamos combinar a visita pastoral no dia e horário que você indicou.",
       celula: "Vamos te indicar uma célula perto do seu bairro.",

@@ -1,0 +1,7 @@
+FOTOS DOS MINISTÉRIOS (cards da página inicial)
+
+Nomes exatos dos arquivos (tudo minúsculo, sem acento):
+  familias.jpg  jovens.jpg  mulheres.jpg  homens.jpg  criancas.jpg  impacto-social.jpg
+
+Formato: JPG na vertical, 700 x 1050 pixels, até uns 150 KB.
+Se o arquivo não existir, o card aparece com o fundo dourado e o ícone, sem quebrar nada.

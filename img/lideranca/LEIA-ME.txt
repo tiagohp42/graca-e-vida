@@ -1,0 +1,6 @@
+FOTOS DA LIDERANÇA
+
+Foto quadrada, de rosto, 400 x 400 pixels, JPG, até uns 80 KB.
+Ex.: nelson.jpg. Depois escreva o caminho no js/config.js, em LIDERANCA:
+  foto: "img/lideranca/nelson.jpg"
+Sem foto, aparece um círculo dourado com as iniciais.

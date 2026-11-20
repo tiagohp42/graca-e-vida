@@ -3,44 +3,76 @@
 Endereço: **https://tiagohp42.github.io/graca-e-vida/**
 Página das tags NFC e chaveiros: **https://tiagohp42.github.io/graca-e-vida/contribua/**
 
-## O que já funciona sozinho
+Site 100% estático (HTML, CSS e JavaScript), feito para o GitHub Pages. Todos os caminhos são relativos.
+Os formulários, o mural de oração e as lições usam a planilha do Google pelo Apps Script, sem servidor próprio.
 
-- **Ao vivo:** no domingo, de 18h45 às 21h30, o player do YouTube aparece na página Ao vivo. Não precisa trocar link.
+---
+
+## 1. Onde colocar as fotos
+
+| O quê | Pasta | Nome do arquivo | Tamanho ideal |
+|---|---|---|---|
+| Cards dos ministérios | `img/ministerios/` | `familias.jpg`, `jovens.jpg`, `mulheres.jpg`, `homens.jpg`, `criancas.jpg`, `impacto-social.jpg` | 700 × 1050, vertical, até 150 KB |
+| Liderança / pastores | `img/lideranca/` | o nome que quiser, ex.: `nelson.jpg` (depois escreva no `config.js`) | 400 × 400, rosto, até 80 KB |
+| Arte do evento em destaque | `img/eventos/` | o nome que quiser (depois escreva no `config.js`) | 1200 × 800, horizontal, até 200 KB |
+| Foto grande do topo | `img/` | `hero.jpg` (substitua mantendo o nome) | 1920 × 1280, até 250 KB |
+
+- Use **JPG**, nome **tudo minúsculo, sem acento e sem espaço**.
+- Card de ministério sem foto não quebra: aparece um fundo dourado com o ícone.
+- Pastor sem foto aparece com as iniciais num círculo dourado.
+- Para deixar a foto leve: abra em squoosh.app, escolha MozJPEG, qualidade 75 e a largura da tabela.
+
+## 2. Como preencher seus dados (`js/config.js`)
+
+Abra o arquivo no GitHub › lápis (Edit) › mude › **Commit changes**. Cada campo tem explicação e exemplo dentro do próprio arquivo.
+
+- `WHATSAPP`: só números com 55 + DDD, ex.: `"5542999998888"`. Vazio = botões escondidos.
+- `INSTAGRAM`: só o nome do perfil, sem @, ex.: `"comunidadegracaevida"`. Vazio = ícone escondido.
+- `EVENTO_DESTAQUE`: `null` esconde. Para mostrar, cole o modelo que está comentado no arquivo.
+- `CELULAS`: uma linha por célula com dia, horário e **só o bairro** (nunca o endereço da casa). Vazio = 3 cartões de apresentação.
+- `LIDERANCA`: nome, função, foto e uma frase (opcional) **dita pela própria pessoa**. Vazio = seção escondida.
+
+Testamos o site com todos esses campos vazios e preenchidos: o layout fica certo nos dois casos.
+
+## 3. Como atualizar o site no GitHub
+
+**Para mudar só o config ou só uma foto:**
+1. Abra github.com/tiagohp42/graca-e-vida e entre na pasta (ex.: `img/ministerios`).
+2. **Add file › Upload files**, arraste a foto e clique em **Commit changes**.
+3. Arquivo com o mesmo nome é substituído. Em 1 a 2 minutos o site atualiza.
+
+**Para subir uma versão nova inteira (pacote .zip):**
+1. Descompacte o .zip no computador.
+2. Abra github.com/tiagohp42/graca-e-vida › **Add file › Upload files**.
+3. Abra a pasta descompactada, selecione **tudo o que está dentro dela** (não a pasta em si) e arraste para a página.
+4. Clique em **Commit changes**. Os arquivos com o mesmo nome são substituídos; os outros continuam.
+5. Acompanhe em **Actions** (bolinha verde = publicado) e abra o site com Ctrl+F5.
+
+## O que funciona sozinho
+
+- **Ao vivo:** domingo, de 18h45 às 21h30, o player do YouTube aparece na página Ao vivo.
 - **Agenda:** as datas dos cultos e encontros se calculam sozinhas.
-- **Formulários:** cadastro de visitante, inscrição em eventos e pedidos de oração vão para a planilha
-  "Graça e Vida · Cadastros do site", cada um na sua aba.
-- **Mural de oração:** só aparecem pedidos com Visibilidade = "Mural" **e** "Aprovado para o mural" marcado,
-  só com o primeiro nome. O mural atualiza em até 1 minuto.
+- **Formulários:** cadastro de visitante, inscrição e pedido de oração vão para a planilha "Graça e Vida · Cadastros do site".
+- **Mural de oração:** só aparecem pedidos com Visibilidade = "Mural" e "Aprovado para o mural" marcado, só com o primeiro nome.
 - **Downloads:** o PDF (ou Google Docs) mais novo da pasta "Graça e Vida · Lições de Célula" vira a lição da semana.
-  O nome do arquivo vira o título, então use nomes como `Lição 12 - O amor que acolhe.pdf`.
-  Arquivos da subpasta "Material de apoio" aparecem em Material de apoio. Atualiza em até 5 minutos.
-- **Mensagens anteriores:** os 3 vídeos mais recentes do canal aparecem sozinhos na página Ao vivo.
-
-## O que você muda no dia a dia: `js/config.js`
-
-Abra o arquivo no GitHub, clique no lápis (Edit), mude e clique em **Commit changes**. Em 1 ou 2 minutos o site atualiza.
-
-- `WHATSAPP`: número da igreja só com dígitos, ex.: `"5542999998888"`. Enquanto vazio, os botões de WhatsApp ficam escondidos.
-- `INSTAGRAM`: o @ sem o @, ex.: `"comunidadegracaevida"`.
-- `EVENTO_DESTAQUE`: para mostrar um evento especial no topo da página Eventos, troque `null` pelo modelo
-  que está comentado logo acima no arquivo. Para a arte, envie a imagem para a pasta `img` e coloque `"img/nome-da-arte.jpg"`.
-  Para esconder de novo, volte para `null`.
+  O nome do arquivo vira o título, ex.: `Lição 12 - O amor que acolhe.pdf`. A subpasta "Material de apoio" aparece em Material de apoio.
+- **Mensagens anteriores:** os 3 vídeos mais recentes do canal aparecem na página Ao vivo.
+- **Células:** o botão "Quero participar" abre o WhatsApp (se preenchido) ou o cadastro com a opção "célula" já marcada.
 
 ## Planilha e Apps Script
 
-- Projeto do Apps Script: **Graça e Vida · Site** (em script.google.com, na conta tiagoesamia@gmail.com).
-- O código está também em `apps-script/Codigo.gs`.
-- Se mudar o código: Implantar › Gerenciar implantações › lápis › Versão: **Nova versão** › Implantar.
-  Assim o endereço continua o mesmo e o site não precisa mudar.
-- Não mude o nome das abas nem a ordem das colunas da planilha.
-- A planilha tem dados pessoais: compartilhe só com secretaria, pastores e equipe de oração.
+- Projeto: **Graça e Vida · Site** em script.google.com (conta tiagoesamia@gmail.com). Cópia do código em `apps-script/Codigo.gs`.
+- Mudou o código? Implantar › Gerenciar implantações › lápis › Versão: **Nova versão** › Implantar (o endereço continua o mesmo).
+- Não mude o nome das abas nem a ordem das colunas. A planilha tem dados pessoais: compartilhe só com quem cuida dela.
 
-## Pasta de lições
+## SEO e compartilhamento
 
-Para os líderes conseguirem baixar, a pasta "Graça e Vida · Lições de Célula" precisa estar como
-**Qualquer pessoa com o link: Leitor** (Google Drive › botão direito na pasta › Compartilhar).
+- Cada página tem título, descrição, link canônico e Open Graph (a prévia que aparece no WhatsApp usa `img/compartilhar.jpg`, 1200 × 630).
+- A página inicial tem dados estruturados de igreja (endereço e horário do culto) para o Google.
+- `sitemap.xml` pode ser enviado no Google Search Console.
 
 ## Domínio próprio (opcional)
 
-Se um dia comprar um domínio (ex.: gracaevida.com.br), dá para apontar para este site em
-Settings › Pages › Custom domain, sem mudar nada no código.
+Se um dia comprar um domínio (ex.: gracaevida.com.br): Settings › Pages › Custom domain.
+Depois troque `https://tiagohp42.github.io/graca-e-vida/` pelo domínio novo nas páginas e no `sitemap.xml`,
+e `/graca-e-vida/` por `/` no `404.html`.
