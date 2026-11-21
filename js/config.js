@@ -108,13 +108,16 @@ window.CGV_CONFIG = {
     // Texto da seção "A missão". Cada parágrafo entre aspas, separados por vírgula.
     // Vazio [] = usa um texto padrão sobre a missão.
     texto: [
-      // "Desde 2019 apoiamos o trabalho de ... em ...",
-      // "Hoje a missão atende ... crianças com ...",
+      "A Igreja Graça e Vida desenvolve um trabalho missionário em Moçambique, com o propósito de levar cuidado, amor e esperança às crianças e famílias da comunidade.",
+      "Semanalmente, enviamos recursos financeiros para garantir que as crianças tenham alimentação. Já adquirimos um terreno no local e montamos uma tenda, que se tornou um espaço de acolhimento e assistência.",
+      "Todos os sábados, as crianças se reúnem nesse espaço para receber alimentação e cuidado.",
+      "É um projeto que cresce por meio da fé, da solidariedade e do compromisso de servir ao próximo, levando o amor de Deus de forma prática.",
     ],
 
     // Foto de capa do topo da página (horizontal, 1920 × 1080). Coloque em img/missao/.
     // Vazio = fundo escuro com dourado.
-    capa: "",
+    // Pode ser uma foto do site (img/missao/capa.jpg) ou um link de foto do Drive.
+    capa: "https://drive.google.com/thumbnail?id=1llm514qSRTPuAHCiWIAXnt8NyCQxnNgI&sz=w1920",
 
     // Missionários: mesmo modelo da liderança. Foto quadrada em img/missao/.
     missionarios: [
