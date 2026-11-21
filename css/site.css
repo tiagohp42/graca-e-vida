@@ -355,14 +355,10 @@ legend{padding:0;margin-bottom:12px;font-size:12px;font-weight:700;letter-spacin
 .mapa iframe{z-index:1}
 
 /* =========================================================
-   WhatsApp (topo, menu do celular e botão flutuante)
+   WhatsApp (menu do celular e botão flutuante)
    ========================================================= */
 .btn-wa{background:#1FAF5A;color:#fff}
 .btn-wa:hover{background:#17964C;color:#fff}
-.wa-topo{padding:10px 16px;min-height:46px;font-size:14px;flex:none;gap:8px}
-.wa-topo svg{width:20px;height:20px}
-@media (max-width:1320px) and (min-width:1181px){.wa-topo .wa-txt{display:none}.wa-topo{padding:10px 13px}}
-@media (max-width:1180px){.wa-topo{width:48px;height:48px;min-height:48px;padding:0;border-radius:10px}.wa-topo .wa-txt{display:none}}
 .gaveta-painel .btn-wa{margin-top:10px}
 .wa-flutuante{position:fixed;right:18px;bottom:18px;z-index:45;width:60px;height:60px;border-radius:999px;background:#1FAF5A;color:#fff !important;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.35),0 0 0 3px rgba(255,255,255,.9);text-decoration:none;transition:transform .2s ease}
 .wa-flutuante[hidden]{display:none}

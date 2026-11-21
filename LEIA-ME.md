@@ -1,9 +1,9 @@
 # Site da Comunidade Graça e Vida
 
-Endereço: **https://tiagohp42.github.io/graca-e-vida/**
-Página das tags NFC e chaveiros: **https://tiagohp42.github.io/graca-e-vida/contribua/**
+Endereço: **https://www.gracaevida.com/**
+Página das tags NFC e chaveiros: **https://www.gracaevida.com/contribua/**
 
-Site 100% estático (HTML, CSS e JavaScript), feito para o GitHub Pages. Todos os caminhos são relativos.
+Site 100% estático (HTML, CSS e JavaScript), publicado pela Vercel. Todos os caminhos são relativos.
 Os formulários, o mural de oração e as lições usam a planilha do Google pelo Apps Script, sem servidor próprio.
 
 ---
