@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Área da equipe · Comunidade Graça e Vida</title>
+<meta name="theme-color" content="#0B0907">
+<link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/site.css">
+<style>
+  body{background:var(--creme)}
+  .adm{max-width:1100px;margin:0 auto;padding:32px 16px 64px}
+  .adm h1{font-family:var(--serif);font-size:34px;margin:0 0 6px}
+  .adm .topo{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .adm form.login{max-width:380px;display:flex;flex-direction:column;gap:14px;background:#fff;padding:24px;border-radius:14px;border:1px solid var(--borda)}
+  .adm input{font:inherit;padding:12px;border:1.5px solid var(--borda);border-radius:8px}
+  .adm .abas{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .adm .abas button[aria-pressed=true]{background:var(--preto);color:#fff}
+  .adm .tabela{overflow-x:auto;background:#fff;border:1px solid var(--borda);border-radius:12px}
+  .adm table{border-collapse:collapse;width:100%;font-size:14px}
+  .adm th,.adm td{padding:10px 12px;border-bottom:1px solid #eee4d2;text-align:left;vertical-align:top}
+  .adm th{background:#faf5ea;white-space:nowrap}
+  .adm td.txt{min-width:260px;white-space:pre-wrap}
+  .adm .msg{margin:10px 0;color:var(--texto2)}
+  .adm .erro{color:#9b1c1c}
+</style>
+</head>
+<body>
+<main class="adm">
+  <div class="topo">
+    <div>
+      <h1>Área da equipe</h1>
+      <p class="msg" data-quem>Entre com o e-mail autorizado para ver os cadastros.</p>
+    </div>
+    <button class="btn btn-borda btn-sm" type="button" data-sair hidden>Sair</button>
+  </div>
+
+  <form class="login" data-login hidden>
+    <label class="lbl" for="ad-email">E-mail</label>
+    <input id="ad-email" name="email" type="email" autocomplete="username" required>
+    <label class="lbl" for="ad-senha">Senha</label>
+    <input id="ad-senha" name="senha" type="password" autocomplete="current-password" required minlength="8">
+    <button class="btn btn-preto" type="submit">Entrar</button>
+    <button class="btn btn-borda btn-sm" type="button" data-criar>Criar conta</button>
+    <p class="msg erro" data-erro hidden></p>
+  </form>
+
+  <section data-painel hidden>
+    <div class="abas">
+      <button class="btn btn-borda btn-sm" type="button" data-aba="oracao" aria-pressed="true">Pedidos de oração</button>
+      <button class="btn btn-borda btn-sm" type="button" data-aba="visitantes" aria-pressed="false">Visitantes</button>
+      <button class="btn btn-borda btn-sm" type="button" data-aba="inscricoes" aria-pressed="false">Inscrições</button>
+      <button class="btn btn-ouro btn-sm" type="button" data-exportar>Exportar CSV</button>
+    </div>
+    <p class="msg" data-status></p>
+    <div class="tabela" data-tabela></div>
+  </section>
+</main>
+<script src="../js/config.js"></script>
+<script type="module" src="../js/admin.js"></script>
+</body>
+</html>

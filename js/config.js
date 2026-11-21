@@ -159,7 +159,12 @@ window.CGV_CONFIG = {
      DAQUI PARA BAIXO, NORMALMENTE NÃO PRECISA MUDAR
      =================================================================== */
 
-  // Endereço do Apps Script da planilha "Graça e Vida · Cadastros do site".
+  // Banco de dados (Neon). Formulários, mural de oração e área da equipe (/admin/) usam estes endereços.
+  NEON_API_URL: "https://br-wild-tooth-bdylubb6-api.compute.c-8.us-east-2.aws.neon.tech",
+  NEON_REALTIME_URL: "wss://ep-broad-waterfall-bdztexep.rt.c-8.us-east-2.aws.neon.tech/",
+  NEON_AUTH_URL: "https://ep-broad-waterfall-bdztexep.neonauth.c-8.us-east-2.aws.neon.tech/neondb/auth",
+
+  // Endereço do Apps Script (Google Drive e YouTube: lições, vídeos e fotos da missão).
   API_URL: "https://script.google.com/macros/s/AKfycbwEMeMkc7tPxRM8a7X2yNjSmogg0YdeWbmdO3ZacwtbJxfda6yNQ02peNfKhdYO24Vq/exec",
 
   // Canal do YouTube.

@@ -23,12 +23,17 @@
   function dm(d) { return ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2); }
   function hm(str) { var p = String(str).split(":"); return [parseInt(p[0], 10) || 0, parseInt(p[1], 10) || 0]; }
 
-  /* ---------- API (planilha via Apps Script) ---------- */
-  var API = (C.API_URL || "").trim();
-  var temApi = /^https:\/\/script\.google(usercontent)?\.com\//.test(API);
+  /* ---------- API ----------
+     Formulários e mural de oração: banco Neon (NEON_API_URL).
+     Lições, vídeos e fotos da missão: Google Drive via Apps Script (API_URL). */
+  var API_DRIVE = (C.API_URL || "").trim();
+  var temDrive = /^https:\/\/script\.google(usercontent)?\.com\//.test(API_DRIVE);
+  var API = (C.NEON_API_URL || "").trim().replace(/\/$/, "");
+  var temApi = /^https:\/\//.test(API);
   function apiGet(acao, extra) {
-    if (!temApi) return Promise.reject(new Error("sem-api"));
-    var url = API + "?acao=" + encodeURIComponent(acao) + (extra || "") + "&t=" + Date.now();
+    var neon = acao === "mural", base = neon ? API : API_DRIVE;
+    if (!(neon ? temApi : temDrive)) return Promise.reject(new Error("sem-api"));
+    var url = base + (neon ? "/" : "") + "?acao=" + encodeURIComponent(acao) + (extra || "") + "&t=" + Date.now();
     return fetch(url, { method: "GET", redirect: "follow" }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j || j.ok === false) throw new Error((j && j.erro) || "erro");
       return j;
@@ -45,7 +50,7 @@
       return j;
     });
   }
-  var MSG_SEM_API = "O envio pelo site ainda não foi ligado à planilha da igreja, então seus dados não foram enviados." +
+  var MSG_SEM_API = "O envio pelo site ainda não foi ligado ao banco de dados da igreja, então seus dados não foram enviados." +
     (C.WHATSAPP ? " Fale com a gente pelo WhatsApp enquanto isso." : " Procure a recepção no domingo ou tente de novo mais tarde.");
   var MSG_FALHA = "Não conseguimos enviar agora. Confira sua internet e tente de novo em instantes." +
     (C.WHATSAPP ? " Se continuar, fale com a gente pelo WhatsApp." : "");
@@ -613,11 +618,20 @@
     if (!temApi) {
       cont.textContent = ""; vazio.hidden = false;
     } else {
-      apiGet("mural").then(function (j) { render(j.pedidos || []); }, function () {
+      var falhou = function () {
         cont.textContent = ""; vazio.hidden = false;
         $("[data-vazio-t]").textContent = "Não conseguimos carregar o mural agora.";
         $("[data-vazio-d]").textContent = "Tente de novo em alguns instantes. Seu pedido pode ser enviado normalmente.";
-      });
+      };
+      var carregarUmaVez = function () { apiGet("mural").then(function (j) { render(j.pedidos || []); }, falhou); };
+      // Mural ao vivo (Neon Realtime): novos pedidos aprovados e orações aparecem sem recarregar
+      if (C.NEON_REALTIME_URL) {
+        import(new URL(ROOT + "js/mural-live.js", location.href).href).then(function (m) {
+          m.iniciar(API, C.NEON_REALTIME_URL, render, carregarUmaVez);
+        }, carregarUmaVez);
+      } else {
+        carregarUmaVez();
+      }
     }
     mural.addEventListener("click", function (e) {
       var b = e.target.closest(".orar");
@@ -704,7 +718,7 @@
     }
     var ICPDF = '<span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#865F18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>';
     var ICDL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
-    if (!temApi) { semLicoes("A lição da semana aparece aqui", "Assim que a lição for colocada na pasta de lições da igreja, ela aparece nesta página para baixar."); return; }
+    if (!temDrive) { semLicoes("A lição da semana aparece aqui", "Assim que a lição for colocada na pasta de lições da igreja, ela aparece nesta página para baixar."); return; }
     apiGet("licoes").then(function (j) {
       var L = j.licoes || [];
       if (!L.length) { semLicoes("A lição desta semana ainda não foi publicada", "Assim que a lição for colocada na pasta de lições da igreja, ela aparece aqui para baixar."); }

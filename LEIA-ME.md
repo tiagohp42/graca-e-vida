@@ -80,7 +80,23 @@ Nas páginas de PIX (Contribua) o botão flutuante não aparece, para não cobri
 - **Mensagens anteriores:** os 3 vídeos mais recentes do canal aparecem na página Ao vivo.
 - **Células:** o botão "Quero participar" abre o WhatsApp (se preenchido) ou o cadastro com a opção "célula" já marcada.
 
+## Banco de dados (Neon)
+
+Os formulários (visitante, inscrição, pedido de oração) e o mural de oração gravam no banco **Neon** (projeto `winter-rice-57955028`, branch `production`). A planilha não recebe mais esses dados.
+
+- **Área da equipe:** `/admin/` no site. Entra quem tiver conta com um e-mail da lista `ADMIN_EMAILS` (no `.env.local`). Lá dá para ver visitantes, inscrições e pedidos, **aprovar pedidos para o mural** e exportar CSV.
+- **Mural ao vivo:** pedidos aprovados e o contador "Orei por você" aparecem sem recarregar a página (Neon Realtime).
+- **Código:** API em `backend/api.ts` (Neon Function `api`), tabelas em `backend/schema.sql`, telas em `src/` (o `npm run build` gera `js/admin.js` e `js/mural-live.js`; esses dois arquivos vão para o GitHub).
+- **Comandos** (precisa do Node e do `neon` instalados, e do `.env.local`, que nunca vai para o GitHub):
+  - `npm run build` · gera os scripts do site
+  - `npm run db:migrate` · cria/atualiza as tabelas
+  - `npm run deploy` · publica a API e os serviços do `neon.ts`
+  - `npm run test:admin` · testa login, área da equipe e exportação
+- Para dar acesso a alguém da equipe: acrescente o e-mail em `ADMIN_EMAILS` no `.env.local`, rode `npm run deploy` e peça para a pessoa clicar em "Criar conta" em `/admin/`.
+
 ## Planilha e Apps Script
+
+O Apps Script continua sendo usado para **lições, vídeos e fotos da missão** (Google Drive e YouTube).
 
 - Projeto: **Graça e Vida · Site** em script.google.com (conta tiagoesamia@gmail.com). Cópia do código em `apps-script/Codigo.gs`.
 - Mudou o código? Implantar › Gerenciar implantações › lápis › Versão: **Nova versão** › Implantar (o endereço continua o mesmo).
