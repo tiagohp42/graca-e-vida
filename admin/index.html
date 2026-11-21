@@ -32,6 +32,13 @@
   .adm td.txt{min-width:260px;white-space:pre-wrap}
   .adm .msg{margin:10px 0;color:var(--texto2)}
   .adm .erro{color:#9b1c1c}
+  .adm .link-btn{background:none;border:0;padding:4px;font:inherit;font-size:14px;color:var(--ouro-escuro);text-decoration:underline;cursor:pointer}
+  .adm .equipe{display:grid;gap:18px}
+  .adm .cartao{background:#fff;border:1px solid var(--borda);border-radius:12px;padding:18px}
+  .adm .cartao h2{font-family:var(--serif);font-size:26px;margin:0 0 10px}
+  .adm .novo-link{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .adm .novo-link input{flex:1 1 280px;min-width:0;font-size:13px}
+  .adm .cartao table td,.adm .cartao table th{padding:8px 10px}
 </style>
 </head>
 <body>
@@ -44,7 +51,7 @@
 <main class="adm">
   <div class="titulo so-login" data-titulo>
     <h1>Área da equipe</h1>
-    <p class="msg" data-quem>Entre com o e-mail autorizado para ver os cadastros.</p>
+    <p class="msg" data-quem>Carregando…</p>
   </div>
 
   <form class="login" data-login hidden>
@@ -53,8 +60,21 @@
     <label class="lbl" for="ad-senha">Senha</label>
     <input id="ad-senha" name="senha" type="password" autocomplete="current-password" required minlength="8">
     <button class="btn btn-preto" type="submit">Entrar</button>
-    <button class="btn btn-borda btn-sm" type="button" data-criar>Criar conta</button>
+    <button class="link-btn" type="button" data-ir-cadastro hidden>Ainda não tenho conta</button>
     <p class="msg erro" data-erro hidden></p>
+  </form>
+
+  <!-- Só aparece com um link de convite válido (?convite=...) -->
+  <form class="login" data-cadastro hidden>
+    <label class="lbl" for="cd-nome">Seu nome</label>
+    <input id="cd-nome" name="nome" type="text" autocomplete="name" required maxlength="80">
+    <label class="lbl" for="cd-email">E-mail</label>
+    <input id="cd-email" name="email" type="email" autocomplete="username" required>
+    <label class="lbl" for="cd-senha">Crie uma senha (mínimo 8 caracteres)</label>
+    <input id="cd-senha" name="senha" type="password" autocomplete="new-password" required minlength="8">
+    <button class="btn btn-preto" type="submit">Criar minha conta da equipe</button>
+    <button class="link-btn" type="button" data-ir-login>Já tenho conta, quero entrar</button>
+    <p class="msg erro" data-erro-cadastro hidden></p>
   </form>
 
   <section data-painel hidden>
@@ -62,10 +82,24 @@
       <button class="btn btn-borda btn-sm" type="button" data-aba="oracao" aria-pressed="true">Pedidos de oração</button>
       <button class="btn btn-borda btn-sm" type="button" data-aba="visitantes" aria-pressed="false">Visitantes</button>
       <button class="btn btn-borda btn-sm" type="button" data-aba="inscricoes" aria-pressed="false">Inscrições</button>
+      <button class="btn btn-borda btn-sm" type="button" data-aba="equipe" aria-pressed="false" data-so-super hidden>Equipe</button>
       <button class="btn btn-ouro btn-sm" type="button" data-exportar>Exportar CSV</button>
     </div>
     <p class="msg" data-status></p>
     <div class="tabela" data-tabela></div>
+    <div class="equipe" data-equipe hidden>
+      <div class="cartao">
+        <h2>Convidar para a equipe</h2>
+        <p class="msg">Gere um link e mande para a pessoa. Ela cria a conta por ele e já entra com acesso aos cadastros. Cada link vale 7 dias e uma vez só.</p>
+        <button class="btn btn-preto btn-sm" type="button" data-gerar>Criar link de cadastro</button>
+        <div class="novo-link" data-novo-link hidden>
+          <input type="text" readonly data-link aria-label="Link de cadastro">
+          <button class="btn btn-ouro btn-sm" type="button" data-copiar>Copiar</button>
+        </div>
+      </div>
+      <div class="cartao"><h2>Membros</h2><div class="tabela" data-membros></div></div>
+      <div class="cartao"><h2>Links criados</h2><div class="tabela" data-convites></div></div>
+    </div>
   </section>
 </main>
 <script src="../js/config.js"></script>

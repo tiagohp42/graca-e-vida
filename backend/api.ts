@@ -6,8 +6,16 @@
  *   POST /                 formulários: { tipo: "visitante" | "inscricao" | "oracao" | "orei", ... }
  *   POST /mural/live       consulta selada do Realtime para o mural ao vivo
  *
- * Admin (Authorization: Bearer <JWT do Neon Auth>, e-mail em ADMIN_EMAILS):
+ * Convite (Authorization: Bearer <JWT>, qualquer conta logada):
+ *   GET  /convite?token=...        o link ainda vale?
+ *   POST /convite/aceitar          { token } -> entra para a equipe
+ *
+ * Admin (Authorization: Bearer <JWT do Neon Auth>; super admins em SUPER_ADMIN_IDS ou membro da tabela equipe):
  *   GET  /admin/eu
+ *   GET  /admin/equipe             (super) membros e convites
+ *   POST /admin/convites           (super) cria link de cadastro
+ *   POST /admin/convites/:id/revogar  (super)
+ *   POST /admin/equipe/remover     (super) { user_id }
  *   GET  /admin/:tabela            visitantes | inscricoes | oracao
  *   POST /admin/oracao/:id         { aprovado?: boolean, visibilidade?: "Mural" | "Privado" }
  *   POST /admin/exportar/:tabela   gera CSV no Object Storage e devolve link temporário
@@ -20,6 +28,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { createRealtime, rawSql } from "@neon/realtime/server";
 import { Files } from "files-sdk";
 import { neon } from "files-sdk/neon";
+import { createHash, randomBytes } from "node:crypto";
 
 const FUSO = "America/Sao_Paulo";
 const ORIGENS = [/^https:\/\/(www\.)?gracaevida\.com$/, /^https:\/\/tiagohp42\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
@@ -36,7 +45,9 @@ const files = new Files({ adapter: neon({ bucket: "assets" }) });
 
 const jwks = createRemoteJWKSet(new URL(process.env.NEON_AUTH_JWKS_URL!));
 const issuer = new URL(process.env.NEON_AUTH_BASE_URL!).origin;
-const ADMINS = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+// Super admins pelo id da conta no Neon Auth (o e-mail sozinho não basta: o cadastro não verifica e-mail)
+const SUPER = (process.env.SUPER_ADMIN_IDS || "").split(",").map((e) => e.trim()).filter(Boolean);
+const CONVITE_DIAS = 7;
 
 /* ---------- utilidades ---------- */
 function txt(v: unknown, max = 200): string {
@@ -134,20 +145,30 @@ async function salvar(d: Record<string, unknown>): Promise<string | null> {
 }
 
 /* ---------- admin ---------- */
-type Admin = { id: string; email: string };
+type Usuario = { id: string; email: string; nome: string };
+type Admin = Usuario & { super: boolean };
 
-async function admin(c: Context): Promise<Admin | null> {
+async function usuario(c: Context): Promise<Usuario | null> {
   const h = c.req.header("authorization") || "";
   if (!h.toLowerCase().startsWith("bearer ")) return null;
   try {
     const { payload } = await jwtVerify(h.slice(7), jwks, { issuer });
-    const email = String(payload.email || "").toLowerCase();
-    if (!payload.sub || !email || !ADMINS.includes(email)) return null;
-    return { id: payload.sub, email };
+    if (!payload.sub) return null;
+    return { id: payload.sub, email: String(payload.email || "").toLowerCase(), nome: String(payload.name || "") };
   } catch {
     return null;
   }
 }
+
+async function admin(c: Context): Promise<Admin | null> {
+  const u = await usuario(c);
+  if (!u) return null;
+  if (SUPER.includes(u.id)) return { ...u, super: true };
+  const { rowCount } = await pool.query("SELECT 1 FROM equipe WHERE user_id = $1", [u.id]);
+  return rowCount ? { ...u, super: false } : null;
+}
+
+const hashToken = (t: string) => createHash("sha256").update(t).digest("hex");
 
 const TABELAS: Record<string, { sql: string }> = {
   visitantes: { sql: "SELECT * FROM visitantes ORDER BY criado_em DESC LIMIT 500" },
@@ -203,6 +224,34 @@ app.post("/mural/live", async (c) => {
   return c.json(await realtime.seal({ query: rawSql<LinhaMural>(SQL_MURAL) }));
 });
 
+app.get("/convite", async (c) => {
+  const token = txt(c.req.query("token"), 100);
+  const { rows } = await pool.query(
+    "SELECT expira_em FROM convites WHERE token_hash = $1 AND NOT revogado AND usado_em IS NULL AND expira_em > now()",
+    [hashToken(token)],
+  );
+  return c.json({ ok: true, valido: rows.length > 0 });
+});
+
+app.post("/convite/aceitar", async (c) => {
+  const u = await usuario(c);
+  if (!u) return c.json({ ok: false, erro: "nao-autorizado" }, 401);
+  const { token } = await c.req.json<{ token?: string }>().catch(() => ({ token: "" }));
+  // Uma instrução só: usa o convite e cadastra na equipe, ou não faz nada
+  const { rows } = await pool.query(
+    `WITH c AS (
+       UPDATE convites SET usado_em = now(), usado_por = $2
+       WHERE token_hash = $1 AND NOT revogado AND usado_em IS NULL AND expira_em > now()
+       RETURNING id)
+     INSERT INTO equipe (email, user_id, nome, convite_id)
+     SELECT $2, $3, $4, id FROM c
+     ON CONFLICT (email) DO UPDATE SET user_id = EXCLUDED.user_id, convite_id = EXCLUDED.convite_id
+     RETURNING email`,
+    [hashToken(txt(token, 100)), u.email, u.id, u.nome],
+  );
+  return rows[0] ? c.json({ ok: true }) : c.json({ ok: false, erro: "convite-invalido" }, 400);
+});
+
 app.use("/admin/*", async (c, next) => {
   const a = await admin(c);
   if (!a) return c.json({ ok: false, erro: "nao-autorizado" }, 401);
@@ -211,6 +260,48 @@ app.use("/admin/*", async (c, next) => {
 });
 
 app.get("/admin/eu", (c) => c.json({ ok: true, admin: c.get("admin" as never) }));
+
+app.use("/admin/equipe/*", soSuper);
+app.use("/admin/convites/*", soSuper);
+async function soSuper(c: Context, next: () => Promise<void>) {
+  if (!(c.get("admin" as never) as Admin).super) return c.json({ ok: false, erro: "so-super-admin" }, 403);
+  await next();
+}
+
+app.get("/admin/equipe", soSuper, async (c) => {
+  const membros = await pool.query("SELECT email, user_id, nome, adicionado_em FROM equipe ORDER BY adicionado_em");
+  const convites = await pool.query(
+    `SELECT id, criado_em, criado_por, expira_em, usado_em, usado_por,
+       CASE WHEN revogado THEN 'Cancelado' WHEN usado_em IS NOT NULL THEN 'Usado'
+            WHEN expira_em <= now() THEN 'Vencido' ELSE 'Aguardando' END AS situacao
+     FROM convites ORDER BY criado_em DESC LIMIT 50`,
+  );
+  return c.json({ ok: true, membros: membros.rows, convites: convites.rows });
+});
+
+app.post("/admin/convites", soSuper, async (c) => {
+  const a = c.get("admin" as never) as Admin;
+  const token = randomBytes(24).toString("base64url");
+  const { rows } = await pool.query(
+    `INSERT INTO convites (token_hash, criado_por, expira_em) VALUES ($1, $2, now() + make_interval(days => $3))
+     RETURNING id, expira_em`,
+    [hashToken(token), a.email, CONVITE_DIAS],
+  );
+  return c.json({ ok: true, id: rows[0].id, token, expira_em: rows[0].expira_em });
+});
+
+app.post("/admin/convites/:id/revogar", async (c) => {
+  const id = c.req.param("id");
+  if (!/^\d+$/.test(id)) return c.json({ ok: false, erro: "id-invalido" }, 400);
+  await pool.query("UPDATE convites SET revogado = true WHERE id = $1 AND usado_em IS NULL", [id]);
+  return c.json({ ok: true });
+});
+
+app.post("/admin/equipe/remover", async (c) => {
+  const { user_id } = await c.req.json<{ user_id?: string }>().catch(() => ({ user_id: "" }));
+  const { rowCount } = await pool.query("DELETE FROM equipe WHERE user_id = $1", [txt(user_id, 100)]);
+  return c.json({ ok: true, removidos: rowCount });
+});
 
 app.get("/admin/:tabela", async (c) => {
   const t = TABELAS[c.req.param("tabela")];

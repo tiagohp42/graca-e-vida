@@ -84,15 +84,17 @@ Nas páginas de PIX (Contribua) o botão flutuante não aparece, para não cobri
 
 Os formulários (visitante, inscrição, pedido de oração) e o mural de oração gravam no banco **Neon** (projeto `winter-rice-57955028`, branch `production`). A planilha não recebe mais esses dados.
 
-- **Área da equipe:** `/admin/` no site. Entra quem tiver conta com um e-mail da lista `ADMIN_EMAILS` (no `.env.local`). Lá dá para ver visitantes, inscrições e pedidos, **aprovar pedidos para o mural** e exportar CSV.
+- **Área da equipe:** `/admin/` no site. Lá dá para ver visitantes, inscrições e pedidos, **aprovar pedidos para o mural** e exportar CSV.
+  - **Super admin:** a conta tiagoesamia@gmail.com (pelo id da conta, em `SUPER_ADMIN_IDS` no `.env.local`). Só o super admin vê a aba **Equipe**.
+  - **Dar acesso a alguém:** aba Equipe › **Criar link de cadastro** › Copiar e mandar para a pessoa. O link vale 7 dias e uma vez só; a pessoa cria a conta por ele e já entra. Na mesma aba dá para cancelar links e tirar o acesso de alguém.
+  - Não existe mais "Criar conta" na tela de login: sem link de convite, ninguém entra.
 - **Mural ao vivo:** pedidos aprovados e o contador "Orei por você" aparecem sem recarregar a página (Neon Realtime).
 - **Código:** API em `backend/api.ts` (Neon Function `api`), tabelas em `backend/schema.sql`, telas em `src/` (o `npm run build` gera `js/admin.js` e `js/mural-live.js`; esses dois arquivos vão para o GitHub).
 - **Comandos** (precisa do Node e do `neon` instalados, e do `.env.local`, que nunca vai para o GitHub):
   - `npm run build` · gera os scripts do site
   - `npm run db:migrate` · cria/atualiza as tabelas
   - `npm run deploy` · publica a API e os serviços do `neon.ts`
-  - `npm run test:admin` · testa login, área da equipe e exportação
-- Para dar acesso a alguém da equipe: acrescente o e-mail em `ADMIN_EMAILS` no `.env.local`, rode `npm run deploy` e peça para a pessoa clicar em "Criar conta" em `/admin/`.
+  - `npm run test:admin` e `npm run test:equipe` · testam login, área da equipe, links de cadastro e exportação (a conta de teste precisa estar em `SUPER_ADMIN_IDS` enquanto roda; veja o `.env.local`)
 
 ## Planilha e Apps Script
 

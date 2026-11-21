@@ -63,3 +63,24 @@ CREATE TABLE IF NOT EXISTS exportacoes (
   linhas     int NOT NULL,
   feito_por  text NOT NULL
 );
+
+-- Equipe com acesso à área /admin/. Os super admins ficam em SUPER_ADMIN_EMAILS (variável da Function).
+CREATE TABLE IF NOT EXISTS equipe (
+  email         text PRIMARY KEY,
+  user_id       text NOT NULL,
+  nome          text,
+  adicionado_em timestamptz NOT NULL DEFAULT now(),
+  convite_id    bigint
+);
+
+-- Links de cadastro da equipe: guardamos só o hash do token. Valem 7 dias e uma vez só.
+CREATE TABLE IF NOT EXISTS convites (
+  id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  token_hash  text NOT NULL UNIQUE,
+  criado_em   timestamptz NOT NULL DEFAULT now(),
+  criado_por  text NOT NULL,
+  expira_em   timestamptz NOT NULL,
+  usado_em    timestamptz,
+  usado_por   text,
+  revogado    boolean NOT NULL DEFAULT false
+);

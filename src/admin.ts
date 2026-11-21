@@ -17,7 +17,13 @@ const erro = $("[data-erro]");
 const status = $("[data-status]");
 const tabela = $("[data-tabela]");
 const sair = $<HTMLButtonElement>("[data-sair]");
+const cadastro = $<HTMLFormElement>("[data-cadastro]");
+const erroCadastro = $("[data-erro-cadastro]");
+const equipe = $("[data-equipe]");
+const exportar = $<HTMLButtonElement>("[data-exportar]");
 let aba = "oracao";
+// Link de cadastro da equipe: /admin/?convite=...
+let convite = new URLSearchParams(location.search).get("convite");
 
 const COLUNAS: Record<string, [string, string][]> = {
   oracao: [["criado_em", "Quando"], ["nome", "Nome"], ["pedido", "Pedido"], ["visibilidade", "Visibilidade"], ["aprovado", "No mural"], ["oracoes", "Orações"], ["origem", "Origem"]],
@@ -46,6 +52,11 @@ async function api(caminho: string, init: RequestInit = {}) {
 }
 
 async function carregar() {
+  const ehEquipe = aba === "equipe";
+  equipe.hidden = !ehEquipe;
+  tabela.hidden = ehEquipe;
+  exportar.hidden = ehEquipe;
+  if (ehEquipe) return carregarEquipe();
   status.textContent = "Carregando…";
   try {
     const { linhas } = await api("/admin/" + aba);
@@ -59,22 +70,85 @@ async function carregar() {
           (l.visibilidade === "Privado" ? " disabled title=\"Pedido privado\"" : "") + ">" + (l.aprovado ? "Tirar do mural" : "Aprovar") + "</button></td>" : "") +
         "</tr>").join("") + "</tbody></table>";
     status.textContent = linhas.length + (linhas.length === 1 ? " registro" : " registros");
-  } catch (e) {
-    const s = (e as { status?: number }).status;
-    status.textContent = s === 401 ? "Este e-mail não está autorizado a ver os cadastros." : "Não conseguimos carregar agora.";
+  } catch {
+    status.textContent = "Não conseguimos carregar agora.";
     tabela.innerHTML = "";
   }
 }
 
+const data = (v: unknown) => (v ? new Date(String(v)).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—");
+
+async function carregarEquipe() {
+  status.textContent = "Carregando…";
+  try {
+    const { membros, convites } = await api("/admin/equipe");
+    $("[data-membros]").innerHTML = membros.length === 0 ? '<p class="msg" style="padding:12px">Ninguém da equipe ainda. Crie um link acima.</p>' :
+      "<table><thead><tr><th>Nome</th><th>E-mail</th><th>Desde</th><th></th></tr></thead><tbody>" +
+      membros.map((m: Record<string, unknown>) => "<tr><td>" + esc(m.nome) + "</td><td>" + esc(m.email) + "</td><td>" + data(m.adicionado_em) +
+        '</td><td><button class="btn btn-borda btn-sm" type="button" data-remover="' + esc(m.user_id) + '" data-email="' + esc(m.email) + '">Remover acesso</button></td></tr>').join("") +
+      "</tbody></table>";
+    $("[data-convites]").innerHTML = convites.length === 0 ? '<p class="msg" style="padding:12px">Nenhum link criado.</p>' :
+      "<table><thead><tr><th>Criado em</th><th>Situação</th><th>Vale até</th><th>Usado por</th><th></th></tr></thead><tbody>" +
+      convites.map((v: Record<string, unknown>) => "<tr><td>" + data(v.criado_em) + "</td><td>" + esc(v.situacao) + "</td><td>" + data(v.expira_em) +
+        "</td><td>" + esc(v.usado_por || "—") + "</td><td>" +
+        (v.situacao === "Aguardando" ? '<button class="btn btn-borda btn-sm" type="button" data-revogar="' + esc(v.id) + '">Cancelar link</button>' : "") +
+        "</td></tr>").join("") + "</tbody></table>";
+    status.textContent = "";
+  } catch {
+    status.textContent = "Não conseguimos carregar a equipe agora.";
+  }
+}
+
+function telaLogin(msg?: string) {
+  login.hidden = false;
+  cadastro.hidden = true;
+  if (msg) { erro.textContent = msg; erro.hidden = false; }
+}
+
 async function mostrar() {
-  const { data } = await auth.getSession();
-  const user = data && "user" in data ? data.user : null;
-  login.hidden = !!user;
-  painel.hidden = !user;
+  const { data: s } = await auth.getSession();
+  const user = s && "user" in s ? s.user : null;
+  painel.hidden = true;
+  login.hidden = true;
+  cadastro.hidden = true;
   sair.hidden = !user;
-  $("[data-titulo]").classList.toggle("so-login", !user);
-  quem.textContent = user ? "Conectado como " + user.email : "Entre com o e-mail autorizado para ver os cadastros.";
-  if (user) await carregar();
+  $("[data-titulo]").classList.toggle("so-login", true);
+
+  if (!user) {
+    if (convite) {
+      const { valido } = await fetch(API + "/convite?token=" + encodeURIComponent(convite)).then((r) => r.json()).catch(() => ({ valido: false }));
+      if (valido) {
+        quem.textContent = "Você foi convidado para a equipe. Crie sua conta para ver os cadastros.";
+        cadastro.hidden = false;
+        $("[data-ir-cadastro]").hidden = false;
+        return;
+      }
+      convite = null;
+      quem.textContent = "Entre com o e-mail autorizado para ver os cadastros.";
+      return telaLogin("Este link de cadastro não vale mais. Peça um novo para quem te convidou.");
+    }
+    quem.textContent = "Entre com o e-mail autorizado para ver os cadastros.";
+    return telaLogin();
+  }
+
+  if (convite) {
+    try { await api("/convite/aceitar", { method: "POST", body: JSON.stringify({ token: convite }) }); }
+    catch { status.textContent = ""; }
+    convite = null;
+    history.replaceState(null, "", location.pathname);
+  }
+
+  let eu: { super: boolean } | null = null;
+  try { eu = (await api("/admin/eu")).admin; } catch { /* sem acesso */ }
+  if (!eu) {
+    quem.textContent = "A conta " + user.email + " ainda não tem acesso. Peça um link de cadastro para o responsável pelo site.";
+    return;
+  }
+  $("[data-titulo]").classList.toggle("so-login", false);
+  quem.textContent = "Conectado como " + user.email + (eu.super ? " · super admin" : "");
+  $("[data-so-super]").hidden = !eu.super;
+  painel.hidden = false;
+  await carregar();
 }
 
 login.addEventListener("submit", async (e) => {
@@ -86,15 +160,23 @@ login.addEventListener("submit", async (e) => {
   await mostrar();
 });
 
-$("[data-criar]").addEventListener("click", async () => {
-  if (!login.reportValidity()) return;
-  erro.hidden = true;
-  const fd = new FormData(login);
-  const email = String(fd.get("email"));
-  const { error } = await auth.signUp.email({ email, password: String(fd.get("senha")), name: email.split("@")[0] });
-  if (error) { erro.textContent = error.message || "Não foi possível criar a conta."; erro.hidden = false; return; }
+cadastro.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  erroCadastro.hidden = true;
+  const fd = new FormData(cadastro);
+  const { error } = await auth.signUp.email({ email: String(fd.get("email")), password: String(fd.get("senha")), name: String(fd.get("nome")) });
+  if (error) {
+    erroCadastro.textContent = error.status === 422 || /exist/i.test(error.message || "")
+      ? "Já existe uma conta com esse e-mail. Clique em \"Já tenho conta\" e entre com ela."
+      : error.message || "Não foi possível criar a conta.";
+    erroCadastro.hidden = false;
+    return;
+  }
   await mostrar();
 });
+
+$("[data-ir-login]").addEventListener("click", () => { cadastro.hidden = true; login.hidden = false; });
+$("[data-ir-cadastro]").addEventListener("click", () => { login.hidden = true; cadastro.hidden = false; });
 
 sair.addEventListener("click", async () => { await auth.signOut(); location.reload(); });
 
@@ -112,7 +194,36 @@ tabela.addEventListener("click", async (e) => {
   finally { await carregar(); }
 });
 
-$("[data-exportar]").addEventListener("click", async () => {
+$("[data-gerar]").addEventListener("click", async () => {
+  status.textContent = "";
+  try {
+    const { token } = await api("/admin/convites", { method: "POST" });
+    const link = location.origin + location.pathname + "?convite=" + encodeURIComponent(token);
+    $<HTMLInputElement>("[data-link]").value = link;
+    $("[data-novo-link]").hidden = false;
+    await carregarEquipe();
+  } catch { status.textContent = "Não conseguimos criar o link agora."; }
+});
+
+$("[data-copiar]").addEventListener("click", async () => {
+  const campo = $<HTMLInputElement>("[data-link]");
+  try { await navigator.clipboard.writeText(campo.value); } catch { campo.select(); document.execCommand("copy"); }
+  status.textContent = "Link copiado. Mande para a pessoa pelo WhatsApp ou e-mail.";
+});
+
+equipe.addEventListener("click", async (e) => {
+  const alvo = e.target as HTMLElement;
+  const rev = alvo.closest<HTMLButtonElement>("[data-revogar]");
+  const rem = alvo.closest<HTMLButtonElement>("[data-remover]");
+  if (rev) { rev.disabled = true; await api("/admin/convites/" + rev.dataset.revogar + "/revogar", { method: "POST" }).catch(() => {}); await carregarEquipe(); }
+  if (rem && confirm("Tirar o acesso de " + rem.dataset.email + " à área da equipe?")) {
+    rem.disabled = true;
+    await api("/admin/equipe/remover", { method: "POST", body: JSON.stringify({ user_id: rem.dataset.remover }) }).catch(() => {});
+    await carregarEquipe();
+  }
+});
+
+exportar.addEventListener("click", async () => {
   status.textContent = "Gerando CSV…";
   try {
     const j = await api("/admin/exportar/" + aba, { method: "POST" });
