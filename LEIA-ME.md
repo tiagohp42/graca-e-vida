@@ -48,6 +48,27 @@ Testamos o site com todos esses campos vazios e preenchidos: o layout fica certo
 4. Clique em **Commit changes**. Os arquivos com o mesmo nome são substituídos; os outros continuam.
 5. Acompanhe em **Actions** (bolinha verde = publicado) e abra o site com Ctrl+F5.
 
+## Missões (aba Missões)
+
+Endereço: **…/graca-e-vida/missoes/** · Página para tag NFC da missão: **…/graca-e-vida/missoes/contribua/**
+
+- **Fotos da galeria:** coloque no Google Drive, em "Graça e Vida · Missão Moçambique › Fotos (aparecem no site)".
+  Aparecem sozinhas em até 5 minutos, as mais novas primeiro. A pasta precisa estar como
+  **Qualquer pessoa com o link: Leitor**, senão as fotos não aparecem para os visitantes.
+  Legenda (opcional): no Drive, botão direito na foto › Informações do arquivo › Descrição.
+- **Notícias do campo:** PDFs ou Google Docs na pasta "Notícias do campo". Aparecem como lista com botão "Ler".
+- **Vídeos, cidade, texto, missionários, capa:** no `js/config.js`, item 6 (MISSAO).
+- **PIX da missão:** no `js/config.js`, item 7 (MISSAO_PIX). É separado do PIX da igreja. Enquanto a chave estiver vazia,
+  aparece um botão "Pedir o PIX da missão no WhatsApp".
+- **Meta de arrecadação:** item 8 (MISSAO_META). `null` esconde a barra.
+
+## WhatsApp
+
+O número fica em `WHATSAPP` no `js/config.js` (hoje: 5542991472626). Ele aparece:
+no topo de todas as páginas, no botão verde flutuante (canto de baixo), no menu do celular, no rodapé e no botão de células.
+A mensagem que já vem escrita muda conforme a página (ex.: no Mural de oração, "Gostaria de um pedido de oração").
+Nas páginas de PIX (Contribua) o botão flutuante não aparece, para não cobrir a chave.
+
 ## O que funciona sozinho
 
 - **Ao vivo:** domingo, de 18h45 às 21h30, o player do YouTube aparece na página Ao vivo.

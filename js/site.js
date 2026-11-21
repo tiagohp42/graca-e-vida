@@ -8,6 +8,7 @@
   })();
   var MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
   var MESES_M = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+  var ICON_WA = '<svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16.04 3C9.4 3 4 8.36 4 14.98c0 2.3.65 4.45 1.78 6.28L4 29l7.96-1.75A12.1 12.1 0 0 0 16.04 27C22.68 27 28 21.62 28 15S22.68 3 16.04 3zm5.34 14.5c-.3-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15-.2.29-.76.94-.93 1.13-.17.2-.34.22-.63.07a7.9 7.9 0 0 1-2.33-1.44 8.8 8.8 0 0 1-1.62-2.01c-.17-.29 0-.45.13-.6.13-.13.29-.34.44-.51.15-.17.2-.29.29-.49.1-.2.05-.37-.02-.51-.08-.15-.66-1.58-.9-2.17-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.37-.27.29-1.02 1-1.02 2.43 0 1.43 1.05 2.82 1.2 3.01.14.2 2.06 3.15 5 4.42.7.3 1.24.48 1.67.62.7.22 1.34.19 1.84.12.56-.08 1.73-.71 1.97-1.39.25-.68.25-1.27.17-1.39-.07-.12-.27-.2-.56-.34z"/></svg>';
   var DIAS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   var $ = function (sel, el) { return (el || document).querySelector(sel); };
   var $$ = function (sel, el) { return Array.prototype.slice.call((el || document).querySelectorAll(sel)); };
@@ -66,26 +67,43 @@
     if (gav && abrir) {
       var ultimoFoco = null;
       var fechar = function () {
-        gav.classList.remove("aberta"); gav.setAttribute("aria-hidden", "true");
+        gav.classList.remove("aberta"); gav.setAttribute("aria-hidden", "true"); document.body.classList.remove("menu-aberto");
         abrir.setAttribute("aria-expanded", "false"); document.body.style.overflow = "";
         if (ultimoFoco) ultimoFoco.focus();
       };
       abrir.addEventListener("click", function () {
         ultimoFoco = abrir;
-        gav.classList.add("aberta"); gav.setAttribute("aria-hidden", "false");
+        gav.classList.add("aberta"); gav.setAttribute("aria-hidden", "false"); document.body.classList.add("menu-aberto");
         abrir.setAttribute("aria-expanded", "true"); document.body.style.overflow = "hidden";
         var f = $(".fechar", gav); if (f) f.focus();
       });
       $$("[data-fechar]", gav).forEach(function (b) { b.addEventListener("click", fechar); });
-      $$("a", gav).forEach(function (a) { a.addEventListener("click", function () { gav.classList.remove("aberta"); document.body.style.overflow = ""; }); });
+      $$("a", gav).forEach(function (a) { a.addEventListener("click", function () { gav.classList.remove("aberta"); document.body.classList.remove("menu-aberto"); document.body.style.overflow = ""; }); });
       document.addEventListener("keydown", function (e) { if (e.key === "Escape" && gav.classList.contains("aberta")) fechar(); });
     }
 
     // WhatsApp e Instagram (escondidos enquanto não configurados)
     var wa = String(C.WHATSAPP || "").replace(/\D/g, "");
-    if (wa.length >= 10) {
-      var msg = encodeURIComponent("Olá! Vim pelo site da Comunidade Graça e Vida.");
-      $$("[data-whatsapp]").forEach(function (a) { a.href = "https://wa.me/" + wa + "?text=" + msg; a.hidden = false; });
+    if (wa.length >= 10 && wa.length <= 13) {
+      if (wa.length <= 11) wa = "55" + wa; // aceita também só DDD + número
+      var MSGS = {
+        inicio: "Olá! Vim pelo site e quero conhecer a Comunidade Graça e Vida.",
+        historia: "Olá! Vim pelo site e quero conhecer a Comunidade Graça e Vida.",
+        eventos: "Olá! Vim pelo site e tenho uma dúvida sobre os eventos.",
+        aovivo: "Olá! Estou assistindo ao culto pelo site.",
+        oracao: "Olá! Gostaria de um pedido de oração.",
+        primeira: "Olá! É minha primeira vez e quero conhecer a igreja.",
+        downloads: "Olá! Sou líder de célula e tenho uma dúvida sobre as lições.",
+        missoes: "Olá! Quero saber mais sobre a missão em Moçambique."
+      };
+      var pag = document.body.getAttribute("data-pagina");
+      var padrao = MSGS[pag] || "Olá! Vim pelo site da Comunidade Graça e Vida.";
+      $$("[data-whatsapp]").forEach(function (a) {
+        var t = a.getAttribute("data-wa-texto") || padrao;
+        a.href = "https://wa.me/" + wa + "?text=" + encodeURIComponent(t); a.hidden = false;
+      });
+    } else {
+      $$("[data-sem-whatsapp]").forEach(function (el) { el.hidden = false; });
     }
     var ig = String(C.INSTAGRAM || "").replace(/^@/, "").trim();
     if (ig) $$("[data-instagram]").forEach(function (a) { a.href = "https://www.instagram.com/" + encodeURIComponent(ig) + "/"; a.hidden = false; });
@@ -254,24 +272,19 @@
     }
   }
 
-  // Liderança: lista do config.js (LIDERANCA). Sem foto = iniciais em dourado. Vazia = seção escondida.
-  function lideranca() {
-    var box = $("[data-lideranca]");
-    if (!box) return;
-    var lista = (C.LIDERANCA || []).filter(function (l) { return l && l.nome; });
-    if (!lista.length) { var sec = $("#lideranca"); if (sec) sec.hidden = true; return; }
-    box.innerHTML = lista.map(function (l) {
-      var partes = String(l.nome).trim().split(/\s+/);
-      var ini = (partes[0][0] + (partes.length > 1 ? partes[partes.length - 1][0] : "")).toUpperCase();
-      var foto = l.foto ? (/^https?:/.test(l.foto) ? l.foto : ROOT + String(l.foto).replace(/^\//, "")) : "";
-      return '<article class="lider">' +
-        (foto ? '<img class="foto-l" src="' + esc(foto) + '" alt="' + esc(l.nome) + '" width="92" height="92" loading="lazy" decoding="async" data-ini="' + esc(ini) + '">'
-              : '<span class="ini" aria-hidden="true">' + esc(ini) + '</span>') +
-        '<div><p class="nm">' + esc(l.nome) + '</p>' +
-        (l.funcao ? '<p class="fn">' + esc(l.funcao) + '</p>' : "") +
-        (l.frase ? '<p class="fr">“' + esc(l.frase) + '”</p>' : "") + '</div></article>';
-    }).join("");
-    // Foto que não carregar vira iniciais
+  // Card de pessoa (liderança e missionários). Sem foto = iniciais em dourado.
+  function cardPessoa(l) {
+    var partes = String(l.nome).trim().split(/\s+/);
+    var ini = (partes[0][0] + (partes.length > 1 ? partes[partes.length - 1][0] : "")).toUpperCase();
+    var foto = l.foto ? (/^https?:/.test(l.foto) ? l.foto : ROOT + String(l.foto).replace(/^\//, "")) : "";
+    return '<article class="lider">' +
+      (foto ? '<img class="foto-l" src="' + esc(foto) + '" alt="' + esc(l.nome) + '" width="92" height="92" loading="lazy" decoding="async" data-ini="' + esc(ini) + '">'
+            : '<span class="ini" aria-hidden="true">' + esc(ini) + '</span>') +
+      '<div><p class="nm">' + esc(l.nome) + '</p>' +
+      (l.funcao ? '<p class="fn">' + esc(l.funcao) + '</p>' : "") +
+      (l.frase ? '<p class="fr">“' + esc(l.frase) + '”</p>' : "") + '</div></article>';
+  }
+  function fotosComReserva(box) {
     $$("img.foto-l", box).forEach(function (img) {
       var trocar = function () {
         var s = document.createElement("span"); s.className = "ini"; s.setAttribute("aria-hidden", "true");
@@ -280,6 +293,196 @@
       img.addEventListener("error", trocar);
       if (img.complete && img.naturalWidth === 0) trocar();
     });
+  }
+
+  // Liderança: lista do config.js (LIDERANCA). Vazia = seção escondida.
+  function lideranca() {
+    var box = $("[data-lideranca]");
+    if (!box) return;
+    var lista = (C.LIDERANCA || []).filter(function (l) { return l && l.nome; });
+    if (!lista.length) { var sec = $("#lideranca"); if (sec) sec.hidden = true; return; }
+    box.innerHTML = lista.map(cardPessoa).join("");
+    fotosComReserva(box);
+  }
+
+  /* ---------- Missões ---------- */
+  function caminho(f) { return /^https?:/.test(f) ? f : ROOT + String(f).replace(/^\//, ""); }
+  function dinheiro(n) { return "R$ " + Number(n || 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 }); }
+
+  function pixMissao(box, compacto) {
+    if (!box) return;
+    var P = C.MISSAO_PIX || {};
+    var chave = String(P.chave || "").trim();
+    var wa = String(C.WHATSAPP || "").replace(/\D/g, "");
+    if (wa.length && wa.length <= 11) wa = "55" + wa;
+    if (!chave) {
+      var link = wa.length >= 12
+        ? '<a class="btn btn-missao" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent("Olá! Quero contribuir com a missão em Moçambique. Qual é o PIX da missão?") + '">' + ICON_WA + ' Pedir o PIX da missão no WhatsApp</a>'
+        : '<a class="btn btn-missao" href="' + ROOT + 'primeira-vez/">Deixar meu contato</a>';
+      box.innerHTML = '<div class="pix-missao"><div class="faixa"><b>PIX MISSÕES</b><span style="font-size:13px">Moçambique</span></div>' +
+        '<div class="corpo-pix"><p style="font-size:17px;font-weight:700">A chave PIX da missão é passada pela nossa equipe.</p>' +
+        '<p class="muted" style="font-size:15px">Fale com a gente e enviamos os dados certinhos para a sua oferta chegar à missão.</p>' + link + '</div></div>';
+      return;
+    }
+    var fav = String(P.favorecido || "").trim(), banco = String(P.banco || "").trim(), tipo = String(P.tipo || "").trim();
+    var qr = String(P.qrcode || "").trim();
+    box.innerHTML = '<div class="pix-missao"' + (compacto ? ' style="box-shadow:0 8px 28px rgba(11,9,7,.12)"' : "") + '>' +
+      '<div class="faixa"><b>PIX MISSÕES</b><span style="font-size:13px">Só para a missão Moçambique</span></div>' +
+      '<div class="corpo-pix">' +
+      '<p style="color:#3B5A3A;font-size:12px;font-weight:700;letter-spacing:.16em">CHAVE PIX' + (tipo ? " · " + esc(tipo.toUpperCase()) : "") + '</p>' +
+      '<p class="chave-missao">' + esc(chave) + '</p>' +
+      '<button type="button" class="copiar-grande btn-missao" data-copiar-missao><span data-rotulo>Copiar chave PIX da missão</span></button>' +
+      (fav ? '<div class="aviso-verde"><strong>Confira antes de confirmar:</strong> o favorecido deve aparecer como <strong>' + esc(fav) + '</strong>' + (banco ? " · " + esc(banco) : "") + '.</div>' : "") +
+      '<div class="pilha" style="gap:8px;padding-top:4px">' +
+      '<div style="display:flex;gap:12px;align-items:flex-start"><span class="num">1</span><p style="margin-top:3px;font-size:15px">Toque em <strong>Copiar chave PIX da missão</strong></p></div>' +
+      '<div style="display:flex;gap:12px;align-items:flex-start"><span class="num">2</span><p style="margin-top:3px;font-size:15px">No app do banco: <strong>Pix › Pagar com chave</strong></p></div>' +
+      '<div style="display:flex;gap:12px;align-items:flex-start"><span class="num">3</span><p style="margin-top:3px;font-size:15px">Cole, digite o valor e confira o nome</p></div></div>' +
+      '</div>' +
+      (qr ? '<div class="qr-lado"><p style="color:#3B5A3A;font-size:12px;font-weight:700;letter-spacing:.16em">QR CODE DA MISSÃO</p><img src="' + esc(caminho(qr)) + '" alt="QR Code PIX da missão Moçambique" width="180" height="180" loading="lazy"><p style="font-size:13px;color:#3F362D">Em outra tela? Abra o banco › <strong>Pix › Ler QR Code</strong>.</p></div>' : "") +
+      '</div>';
+    var b = $("[data-copiar-missao]", box), rot = $("[data-rotulo]", b), orig = rot.textContent;
+    b.addEventListener("click", function () {
+      copiar(chave).then(function () {
+        rot.textContent = "Chave da missão copiada! Agora abra seu banco";
+        b.classList.add("copiado"); b.style.color = "#0B0907";
+        clearTimeout(b._t); b._t = setTimeout(function () { rot.textContent = orig; b.classList.remove("copiado"); b.style.color = ""; }, 6000);
+      }, function () { rot.textContent = "Chave: " + chave; });
+    });
+  }
+
+  function metaMissao(box) {
+    var M = C.MISSAO_META;
+    if (!box || !M || !M.valor) return;
+    var pct = Math.max(0, Math.min(100, Math.round((Number(M.arrecadado) || 0) / Number(M.valor) * 100)));
+    box.innerHTML = '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline">' +
+      '<p style="font-weight:700">' + esc(M.titulo || "Meta da missão") + '</p>' +
+      '<p style="font-size:14px;color:#3F362D;font-variant-numeric:tabular-nums"><strong style="color:#17120D">' + dinheiro(M.arrecadado) + '</strong> de ' + dinheiro(M.valor) + '</p></div>' +
+      '<div class="meta-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="' + pct + '% da meta"><span style="width:' + pct + '%"></span></div>' +
+      '<p class="small">' + pct + '% da meta alcançada. Obrigado a cada um que contribui!</p>';
+    box.hidden = false;
+  }
+
+  function idYoutube(url) {
+    var m = String(url).match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);
+    return m ? m[1] : (/^[\w-]{11}$/.test(url) ? url : "");
+  }
+
+  function missoes() {
+    var M = C.MISSAO || {};
+    var cidade = String(M.cidade || "").trim();
+    var lugar = cidade ? cidade + ", Moçambique" : "Moçambique";
+    $("[data-m-lugar]").textContent = lugar;
+    $("[data-m-onde]").textContent = cidade ? cidade + " · Moçambique" : "Moçambique, África";
+    if (cidade) {
+      var mapa = $("[data-m-mapa]");
+      mapa.src = "https://maps.google.com/maps?q=" + encodeURIComponent(cidade + ", Moçambique") + "&z=7&hl=pt-BR&output=embed";
+      mapa.title = "Mapa: " + cidade + ", Moçambique";
+    }
+    if (M.desde) { var d = $("[data-m-desde]"); d.textContent = "A Graça e Vida apoia esta missão desde " + M.desde + "."; d.hidden = false; }
+    if (M.capa) {
+      var cp = $("[data-m-capa]"); cp.src = caminho(M.capa); cp.hidden = false; $("[data-m-veu]").hidden = false;
+      cp.addEventListener("error", function () { cp.hidden = true; $("[data-m-veu]").hidden = true; });
+    }
+    var tx = (M.texto || []).filter(function (t) { return String(t || "").trim(); });
+    if (tx.length) $("[data-m-texto]").innerHTML = tx.map(function (t) { return '<p class="muted">' + esc(t) + "</p>"; }).join("");
+    var fatos = $("[data-m-fatos]");
+    var extras = "";
+    if (cidade) extras += '<div class="fato"><b>' + esc(cidade) + '</b><span>onde a missão atua</span></div>';
+    if (M.desde) extras += '<div class="fato"><b>Desde ' + esc(M.desde) + '</b><span>apoiando a missão</span></div>';
+    if (extras) fatos.innerHTML = extras + fatos.innerHTML;
+
+    // Missionários (mesmo visual da liderança)
+    var ms = (M.missionarios || []).filter(function (l) { return l && l.nome; });
+    if (ms.length) {
+      $("[data-m-missionarios-sec]").hidden = false;
+      $("[data-m-missionarios]").innerHTML = ms.map(cardPessoa).join("");
+      fotosComReserva($("[data-m-missionarios]"));
+    }
+
+    // Vídeos: miniatura leve; o player só carrega no toque
+    var ids = (M.videos || []).map(idYoutube).filter(Boolean);
+    if (ids.length) {
+      var vbox = $("[data-m-videos]");
+      vbox.innerHTML = ids.map(function (id) {
+        return '<button type="button" class="vid" data-vid="' + id + '" aria-label="Assistir ao vídeo da missão">' +
+          '<img src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy">' +
+          '<span class="play-grande"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="#0B0907"/></svg></span></button>';
+      }).join("");
+      vbox.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-vid]"); if (!b || b.querySelector("iframe")) return;
+        var f = document.createElement("iframe");
+        f.src = "https://www.youtube-nocookie.com/embed/" + b.getAttribute("data-vid") + "?autoplay=1&rel=0";
+        f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true; f.title = "Vídeo da missão";
+        b.innerHTML = ""; b.appendChild(f); b.style.cursor = "default";
+      });
+    }
+
+    pixMissao($("[data-m-pix]"), false);
+    metaMissao($("[data-m-meta]"));
+
+    // Fotos e notícias vêm da pasta do Google Drive (pela planilha)
+    var gal = $("[data-m-galeria]"), vazio = $("[data-m-galeria-vazio]"), nFotos = $("[data-m-fotos-n]");
+    apiGet("missao").then(function (j) {
+      var fotos = j.fotos || [];
+      if (fotos.length) {
+        var ok = 0;
+        gal.innerHTML = fotos.map(function (f, i) {
+          return '<button type="button" data-foto="' + i + '" aria-label="Ampliar foto ' + (i + 1) + '"><img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(f.id) + '&sz=w800" alt="' + esc(f.legenda || "Foto da missão em Moçambique") + '" loading="lazy" decoding="async"></button>';
+        }).join("");
+        $$("img", gal).forEach(function (img) {
+          img.addEventListener("load", function () { ok++; vazio.hidden = true; nFotos.textContent = fotos.length === 1 ? "1 foto" : fotos.length + " fotos"; });
+          img.addEventListener("error", function () { img.closest("button").remove(); });
+        });
+        lightbox(fotos);
+      }
+      var nt = j.noticias || [];
+      if (nt.length) {
+        $("[data-m-noticias-sec]").hidden = false;
+        $("[data-m-noticias]").innerHTML = nt.slice(0, 8).map(function (n) {
+          return '<li><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#865F18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>' +
+            '<span class="nm"><span style="font-weight:700">' + esc(n.titulo) + '</span><span class="small">' + esc(n.data) + '</span></span>' +
+            '<a class="btn btn-borda btn-sm" href="' + esc(n.ver) + '" rel="noopener">Ler</a></li>';
+        }).join("");
+      }
+    }).catch(function () {});
+  }
+
+  function lightbox(fotos) {
+    var lb = $("[data-lightbox]"), img = $("[data-lb-img]", lb), cont = $("[data-lb-cont]", lb), atual = 0, foco = null;
+    function mostrar(i) {
+      atual = (i + fotos.length) % fotos.length;
+      img.src = "https://drive.google.com/thumbnail?id=" + encodeURIComponent(fotos[atual].id) + "&sz=w1600";
+      img.alt = fotos[atual].legenda || "Foto da missão em Moçambique";
+      cont.textContent = (atual + 1) + " de " + fotos.length + (fotos[atual].legenda ? " · " + fotos[atual].legenda : "");
+    }
+    function fechar() { lb.hidden = true; document.body.style.overflow = ""; document.body.classList.remove("menu-aberto"); if (foco) foco.focus(); }
+    $("[data-m-galeria]").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-foto]"); if (!b) return;
+      foco = b; mostrar(+b.getAttribute("data-foto")); lb.hidden = false;
+      document.body.style.overflow = "hidden"; document.body.classList.add("menu-aberto");
+      $("[data-lb-fechar]", lb).focus();
+    });
+    $("[data-lb-fechar]", lb).addEventListener("click", fechar);
+    $("[data-lb-ant]", lb).addEventListener("click", function () { mostrar(atual - 1); });
+    $("[data-lb-prox]", lb).addEventListener("click", function () { mostrar(atual + 1); });
+    lb.addEventListener("click", function (e) { if (e.target === lb) fechar(); });
+    document.addEventListener("keydown", function (e) {
+      if (lb.hidden) return;
+      if (e.key === "Escape") fechar();
+      if (e.key === "ArrowLeft") mostrar(atual - 1);
+      if (e.key === "ArrowRight") mostrar(atual + 1);
+    });
+    var x0 = null;
+    lb.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener("touchend", function (e) {
+      if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 50) mostrar(atual + (dx < 0 ? 1 : -1));
+    });
+  }
+
+  function missoesContribua() {
+    pixMissao($("[data-m-pix]"), true);
+    metaMissao($("[data-m-meta]"));
   }
 
   /* ---------- Página: Eventos ---------- */
@@ -528,5 +731,5 @@
 
   comum();
   var p = document.body.getAttribute("data-pagina");
-  ({ inicio: inicio, eventos: eventos, aovivo: aovivo, oracao: oracao, primeira: primeira, downloads: downloads }[p] || function () {})();
+  ({ inicio: inicio, eventos: eventos, aovivo: aovivo, oracao: oracao, primeira: primeira, downloads: downloads, missoes: missoes, "missoes-contribua": missoesContribua }[p] || function () {})();
 })();

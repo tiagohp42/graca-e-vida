@@ -27,7 +27,7 @@ window.CGV_CONFIG = {
      Preenchido = aparece o ícone no rodapé, o botão "Fale conosco" e o botão
      "Quero participar de uma célula" passa a abrir uma conversa no WhatsApp.
      ------------------------------------------------------------------- */
-  WHATSAPP: "",
+  WHATSAPP: "5542991472626",
 
   /* -------------------------------------------------------------------
      2) INSTAGRAM DA IGREJA
@@ -89,6 +89,69 @@ window.CGV_CONFIG = {
     // { nome: "Nome do pastor", funcao: "Pastor", foto: "img/lideranca/pastor.jpg", frase: "Seja bem-vindo à nossa casa." },
   ],
 
+  /* -------------------------------------------------------------------
+     6) MISSÃO MOÇAMBIQUE (aba Missões)
+     Tudo aqui é opcional: o que ficar vazio usa um texto padrão ou some.
+
+     FOTOS: não precisa mexer aqui. Coloque as fotos no Google Drive, na pasta
+     "Graça e Vida · Missão Moçambique › Fotos (aparecem no site)".
+     Elas aparecem sozinhas na galeria (as mais novas primeiro).
+     Cartas e notícias em PDF ou Docs vão na pasta "Notícias do campo".
+     ------------------------------------------------------------------- */
+  MISSAO: {
+    // Cidade ou região onde a missão atua. Ex.: "Nampula". Vazio = só "Moçambique".
+    cidade: "",
+
+    // Ano em que a igreja começou a apoiar a missão. Ex.: "2019". Vazio = não aparece.
+    desde: "",
+
+    // Texto da seção "A missão". Cada parágrafo entre aspas, separados por vírgula.
+    // Vazio [] = usa um texto padrão sobre a missão.
+    texto: [
+      // "Desde 2019 apoiamos o trabalho de ... em ...",
+      // "Hoje a missão atende ... crianças com ...",
+    ],
+
+    // Foto de capa do topo da página (horizontal, 1920 × 1080). Coloque em img/missao/.
+    // Vazio = fundo escuro com dourado.
+    capa: "",
+
+    // Missionários: mesmo modelo da liderança. Foto quadrada em img/missao/.
+    missionarios: [
+      // { nome: "Nome do missionário", funcao: "Missionário em Moçambique", foto: "img/missao/nome.jpg", frase: "" },
+    ],
+
+    // Vídeos do YouTube: cole o link de cada vídeo entre aspas.
+    // Vazio [] = aparece um botão para o canal da igreja.
+    videos: [
+      // "https://www.youtube.com/watch?v=XXXXXXXXXXX",
+    ]
+  },
+
+  /* -------------------------------------------------------------------
+     7) PIX DA MISSÃO (diferente do PIX da igreja!)
+     chave: exatamente como o banco aceita (CNPJ/CPF só números, celular com +55).
+     tipo: "CNPJ", "CPF", "E-mail", "Celular" ou "Chave aleatória".
+     favorecido: o nome que aparece no app do banco na hora de pagar.
+     qrcode: imagem do QR Code da missão em img/missao/ (opcional). Vazio = sem QR.
+     Chave vazia "" = no lugar do PIX aparece "Fale com a gente pelo WhatsApp".
+     ------------------------------------------------------------------- */
+  MISSAO_PIX: {
+    chave: "",
+    tipo: "",
+    favorecido: "",
+    banco: "",
+    qrcode: ""
+  },
+
+  /* -------------------------------------------------------------------
+     8) META DA MISSÃO (barra de progresso, opcional)
+     null = escondida. Para mostrar, troque null por:
+       MISSAO_META: { titulo: "Meta de dezembro", valor: 3000, arrecadado: 1850 },
+     Números sem R$, sem ponto e sem aspas. Atualize o "arrecadado" quando quiser.
+     ------------------------------------------------------------------- */
+  MISSAO_META: null,
+
   /* ===================================================================
      DAQUI PARA BAIXO, NORMALMENTE NÃO PRECISA MUDAR
      =================================================================== */
@@ -102,6 +165,9 @@ window.CGV_CONFIG = {
 
   // Chave PIX (CNPJ só com números).
   PIX: "27113399000173",
+
+  // Pasta da missão no Google Drive (fotos e notícias).
+  PASTA_MISSAO: "https://drive.google.com/drive/folders/1EPecycKJR2bqeudEbWjwHgC4jMRsKiaf",
 
   // Pasta das lições de célula no Google Drive.
   PASTA_LICOES: "https://drive.google.com/drive/folders/1ofXFlIZYoNSRi8tky22x3-08ZdLuSXdG",

@@ -1,0 +1,9 @@
+IMAGENS DA MISSÃO MOÇAMBIQUE
+
+As FOTOS DA GALERIA não ficam aqui: coloque no Google Drive, na pasta
+"Graça e Vida · Missão Moçambique › Fotos (aparecem no site)". Elas aparecem sozinhas.
+
+Aqui ficam só:
+  - capa da página (horizontal, 1920 x 1080), ex.: capa.jpg  -> config.js: MISSAO.capa: "img/missao/capa.jpg"
+  - fotos dos missionários (quadradas, 400 x 400)            -> config.js: MISSAO.missionarios
+  - QR Code do PIX da missão (PNG)                           -> config.js: MISSAO_PIX.qrcode: "img/missao/qr-pix-missao.png"

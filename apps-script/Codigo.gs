@@ -14,6 +14,8 @@ var PLANILHA_ID = '1mrzxVLALON2cofAp55qbbf8tj6rXu7VYpV2R6UTZSZ0';
 var PASTA_LICOES_ID = '1ofXFlIZYoNSRi8tky22x3-08ZdLuSXdG';
 var NOME_PASTA_MATERIAL = 'Material de apoio';
 var CANAL_YOUTUBE_ID = 'UCH6nQKrkyuLB1iAqDx9J9Yw';
+var PASTA_MISSAO_FOTOS_ID = '10Q9YK-fOsjETleCQcUEBQRV4jAb2g_JT';
+var PASTA_MISSAO_NOTICIAS_ID = '1bumkIxqJ1n3zxcwyj-mxSfflpwqUxKs7';
 var FUSO = 'America/Sao_Paulo';
 
 var ABA_VISITANTES = 'Visitantes';
@@ -27,6 +29,7 @@ function doGet(e) {
     if (acao === 'mural') return json_({ ok: true, pedidos: mural_() });
     if (acao === 'licoes') return json_(licoes_());
     if (acao === 'videos') return json_({ ok: true, videos: videos_() });
+    if (acao === 'missao') return json_(missao_());
     if (acao === 'teste') return json_({ ok: true, mensagem: 'Ligação com a planilha funcionando.' });
     return json_({ ok: false, erro: 'acao-desconhecida' });
   } catch (err) {
@@ -206,6 +209,41 @@ function videos_() {
   return lista;
 }
 
+/* ---------------- Missão Moçambique ---------------- */
+// Fotos: imagens da pasta "Fotos (aparecem no site)", das mais novas para as mais antigas.
+// A descrição do arquivo no Drive (botão direito › Informações do arquivo) vira a legenda.
+// Notícias: PDFs e Google Docs da pasta "Notícias do campo".
+function missao_() {
+  var cache = CacheService.getScriptCache();
+  var c = cache.get('missao');
+  if (c) return JSON.parse(c);
+  var fotos = [], noticias = [];
+  var it = DriveApp.getFolderById(PASTA_MISSAO_FOTOS_ID).getFiles();
+  while (it.hasNext()) {
+    var f = it.next();
+    if (String(f.getMimeType()).indexOf('image/') !== 0) continue;
+    fotos.push({ id: f.getId(), legenda: String(f.getDescription() || '').slice(0, 140), t: f.getDateCreated().getTime() });
+  }
+  var it2 = DriveApp.getFolderById(PASTA_MISSAO_NOTICIAS_ID).getFiles();
+  while (it2.hasNext()) {
+    var n = it2.next();
+    var tipo = n.getMimeType();
+    if (tipo !== 'application/pdf' && tipo !== MimeType.GOOGLE_DOCS) continue;
+    noticias.push({
+      titulo: n.getName().replace(/\.[a-z0-9]{2,4}$/i, ''),
+      data: Utilities.formatDate(n.getDateCreated(), FUSO, 'dd/MM/yyyy'),
+      ver: tipo === 'application/pdf' ? 'https://drive.google.com/file/d/' + n.getId() + '/view' : 'https://docs.google.com/document/d/' + n.getId() + '/view',
+      t: n.getDateCreated().getTime()
+    });
+  }
+  var porData = function (a, b) { return b.t - a.t; };
+  var limpa = function (x) { delete x.t; return x; };
+  fotos.sort(porData); noticias.sort(porData);
+  var r = { ok: true, fotos: fotos.slice(0, 60).map(limpa), noticias: noticias.slice(0, 10).map(limpa) };
+  cache.put('missao', JSON.stringify(r), 300);
+  return r;
+}
+
 /* ---------------- Ajudantes ---------------- */
 function aba_(nome) {
   var aba = SpreadsheetApp.openById(PLANILHA_ID).getSheetByName(nome);
@@ -257,6 +295,7 @@ function json_(obj) {
 function autorizar() {
   aba_(ABA_VISITANTES);
   DriveApp.getFolderById(PASTA_LICOES_ID).getName();
+  DriveApp.getFolderById(PASTA_MISSAO_FOTOS_ID).getName();
   UrlFetchApp.fetch('https://www.youtube.com/feeds/videos.xml?channel_id=' + CANAL_YOUTUBE_ID, { muteHttpExceptions: true });
   console.log('Tudo autorizado.');
 }
