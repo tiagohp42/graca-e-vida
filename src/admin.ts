@@ -40,11 +40,22 @@ function cel(k: string, v: unknown): string {
   return esc(v);
 }
 
+// O cliente da Neon põe o JWT em session.token (vem do cabeçalho set-auth-jwt); token() fica de reserva
+async function jwt(): Promise<string> {
+  try {
+    const { data } = await auth.getSession();
+    const t = data && "session" in data ? data.session?.token : "";
+    if (t && t.split(".").length === 3) return t;
+  } catch { /* tenta o outro jeito */ }
+  try { return (await auth.token())?.data?.token || ""; } catch { return ""; }
+}
+
 async function api(caminho: string, init: RequestInit = {}) {
-  const { data } = await auth.token();
+  const token = await jwt();
+  if (!token) throw Object.assign(new Error("sem-token"), { status: 0 });
   const r = await fetch(API + caminho, {
     ...init,
-    headers: { ...(init.headers || {}), Authorization: "Bearer " + (data?.token || ""), "Content-Type": "application/json" },
+    headers: { ...(init.headers || {}), Authorization: "Bearer " + token, "Content-Type": "application/json" },
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok || j.ok === false) throw Object.assign(new Error(j.erro || "falha"), { status: r.status });
@@ -139,9 +150,12 @@ async function mostrar() {
   }
 
   let eu: { super: boolean } | null = null;
-  try { eu = (await api("/admin/eu")).admin; } catch { /* sem acesso */ }
+  let falha = 0;
+  try { eu = (await api("/admin/eu")).admin; } catch (e) { falha = (e as { status?: number }).status ?? -1; }
   if (!eu) {
-    quem.textContent = "A conta " + user.email + " ainda não tem acesso. Peça um link de cadastro para o responsável pelo site.";
+    quem.textContent = falha === 401 || falha === 403
+      ? "A conta " + user.email + " ainda não tem acesso. Peça um link de cadastro para o responsável pelo site."
+      : "Não conseguimos confirmar seu login agora. Clique em Sair, entre de novo e, se continuar, recarregue a página.";
     return;
   }
   $("[data-titulo]").classList.toggle("so-login", false);
