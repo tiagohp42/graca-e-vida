@@ -22,7 +22,7 @@ import { Files } from "files-sdk";
 import { neon } from "files-sdk/neon";
 
 const FUSO = "America/Sao_Paulo";
-const ORIGENS = [/^https:\/\/tiagohp42\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
+const ORIGENS = [/^https:\/\/(www\.)?gracaevida\.com$/, /^https:\/\/tiagohp42\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 attachDatabasePool(pool);

@@ -108,8 +108,10 @@ O Apps Script continua sendo usado para **lições, vídeos e fotos da missão**
 - A página inicial tem dados estruturados de igreja (endereço e horário do culto) para o Google.
 - `sitemap.xml` pode ser enviado no Google Search Console.
 
-## Domínio próprio (opcional)
+## Domínio e hospedagem
 
-Se um dia comprar um domínio (ex.: gracaevida.com.br): Settings › Pages › Custom domain.
-Depois troque `https://tiagohp42.github.io/graca-e-vida/` pelo domínio novo nas páginas e no `sitemap.xml`,
-e `/graca-e-vida/` por `/` no `404.html`.
+O site oficial é **https://www.gracaevida.com** (hospedado na Vercel; `gracaevida.com` redireciona para o www).
+A Vercel roda `npm run build` e publica a pasta `public/` (veja `vercel.json` e `scripts/vercel-public.mjs`).
+Se o domínio mudar, troque o endereço nas páginas e no `sitemap.xml`, em `ORIGENS` no `backend/api.ts`,
+e libere o domínio novo no login e no mural ao vivo:
+`neon neon-auth domain add https://novo-dominio` e `neon realtime enable --allowed-origin ...` (repita todos os domínios).
