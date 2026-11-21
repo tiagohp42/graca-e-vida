@@ -72,6 +72,7 @@ async function mostrar() {
   login.hidden = !!user;
   painel.hidden = !user;
   sair.hidden = !user;
+  $("[data-titulo]").classList.toggle("so-login", !user);
   quem.textContent = user ? "Conectado como " + user.email : "Entre com o e-mail autorizado para ver os cadastros.";
   if (user) await carregar();
 }

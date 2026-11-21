@@ -10,11 +10,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/site.css">
 <style>
-  body{background:var(--creme)}
-  .adm{max-width:1100px;margin:0 auto;padding:32px 16px 64px}
-  .adm h1{font-family:var(--serif);font-size:34px;margin:0 0 6px}
-  .adm .topo{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-  .adm form.login{max-width:380px;display:flex;flex-direction:column;gap:14px;background:#fff;padding:24px;border-radius:14px;border:1px solid var(--borda)}
+  body{background:var(--creme);margin:0}
+  .adm-cab{background:var(--preto);border-bottom:1px solid rgba(225,198,106,.18)}
+  .adm-cab .in{max-width:1100px;margin:0 auto;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .adm-cab img{height:44px;width:auto;display:block}
+  .adm-cab .btn-claro{min-height:42px;padding:10px 16px}
+  .adm{max-width:1100px;margin:0 auto;padding:36px 16px 64px}
+  .adm h1{font-family:var(--serif);font-size:38px;line-height:1.1;margin:0 0 6px;color:var(--texto)}
+  .adm .titulo{margin-bottom:24px}
+  .adm .titulo.so-login{text-align:center}
+  .adm form.login{max-width:400px;margin:0 auto;display:flex;flex-direction:column;gap:12px;background:#fff;padding:28px;border-radius:14px;border:1px solid var(--borda);box-shadow:0 10px 30px rgba(23,18,13,.06)}
+  .adm form.login .btn{width:100%}
+  .adm form.login .lbl{margin-top:4px}
   .adm input{font:inherit;padding:12px;border:1.5px solid var(--borda);border-radius:8px}
   .adm .abas{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
   .adm .abas button[aria-pressed=true]{background:var(--preto);color:#fff}
@@ -28,13 +35,16 @@
 </style>
 </head>
 <body>
+<header class="adm-cab">
+  <div class="in">
+    <a href="../"><img src="../img/logo.png" alt="Comunidade Graça e Vida · voltar ao site"></a>
+    <button class="btn btn-claro btn-sm" type="button" data-sair hidden>Sair</button>
+  </div>
+</header>
 <main class="adm">
-  <div class="topo">
-    <div>
-      <h1>Área da equipe</h1>
-      <p class="msg" data-quem>Entre com o e-mail autorizado para ver os cadastros.</p>
-    </div>
-    <button class="btn btn-borda btn-sm" type="button" data-sair hidden>Sair</button>
+  <div class="titulo so-login" data-titulo>
+    <h1>Área da equipe</h1>
+    <p class="msg" data-quem>Entre com o e-mail autorizado para ver os cadastros.</p>
   </div>
 
   <form class="login" data-login hidden>
