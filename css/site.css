@@ -68,14 +68,25 @@ p{margin:0}
   .gaveta-painel a.item[aria-current=page]{color:var(--ouro)}
   .gaveta-painel .btn{margin-top:16px}
 }
-/* Em telas estreitas não cabem os dois botões: fica o Contribua */
-@media (max-width:440px){.cta-topo{display:none !important}}
 @media (max-width:520px){
   .cta-topo .longo{display:none}
   .cta-topo{padding:10px 14px}
   .marca img{height:48px}
 }
 @media (min-width:521px){.cta-topo .curto{display:none}}
+/* Celular: Contribua e Primeira vez? lado a lado, mais compactos e sem ícones */
+@media (max-width:440px){
+  .topo nav{gap:6px}
+  .topo .wrap{padding-left:14px;padding-right:14px}
+  .marca img{height:42px}
+  .contrib-cel,.cta-topo{padding:8px 10px;min-height:42px;font-size:13px;gap:0}
+  .contrib-cel svg,.cta-topo svg{display:none}
+  .menu-btn{width:42px;height:42px}
+}
+@media (max-width:350px){
+  .marca img{height:36px}
+  .contrib-cel,.cta-topo{padding:8px 8px;font-size:12px}
+}
 
 /* ---------- Elementos comuns ---------- */
 .rotulo{display:flex;align-items:center;gap:14px;font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase}
