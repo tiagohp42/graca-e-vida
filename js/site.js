@@ -334,7 +334,7 @@
       '<div class="faixa"><b>PIX MISSÕES</b><span style="font-size:13px">Só para a missão Moçambique</span></div>' +
       '<div class="corpo-pix">' +
       '<p style="color:#3B5A3A;font-size:12px;font-weight:700;letter-spacing:.16em">CHAVE PIX' + (tipo ? " · " + esc(tipo.toUpperCase()) : "") + '</p>' +
-      '<p class="chave-missao">' + esc(chave) + '</p>' +
+      '<p class="chave-missao' + (chave.length > 18 ? ' longa' : '') + '">' + esc(chave) + '</p>' +
       '<button type="button" class="copiar-grande btn-missao" data-copiar-missao><span data-rotulo>Copiar chave PIX da missão</span></button>' +
       (fav ? '<div class="aviso-verde"><strong>Confira antes de confirmar:</strong> o favorecido deve aparecer como <strong>' + esc(fav) + '</strong>' + (banco ? " · " + esc(banco) : "") + '.</div>' : "") +
       '<div class="pilha" style="gap:8px;padding-top:4px">' +

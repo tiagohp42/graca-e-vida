@@ -140,11 +140,11 @@ window.CGV_CONFIG = {
      Chave vazia "" = no lugar do PIX aparece "Fale com a gente pelo WhatsApp".
      ------------------------------------------------------------------- */
   MISSAO_PIX: {
-    chave: "",
-    tipo: "",
-    favorecido: "",
-    banco: "",
-    qrcode: ""
+    chave: "socialgracaevida@gmail.com",
+    tipo: "E-mail",
+    favorecido: "Comunidade Graça e Vida",
+    banco: "Cora",
+    qrcode: "img/missao/qr-pix-missao.png"
   },
 
   /* -------------------------------------------------------------------
