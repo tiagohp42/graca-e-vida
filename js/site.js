@@ -697,6 +697,13 @@
       if (!d.oracao) d.pedido = "";
       return d;
     }, function (d) {
+      // Tela de obrigado personalizada (js/obrigado.js); se não carregar, fica a caixa simples abaixo
+      if (window.CGV_OBRIGADO) {
+        form.hidden = true; form.reset();
+        $$(".extra", form).forEach(function (x) { x.hidden = true; });
+        window.CGV_OBRIGADO.mostrar(ok, d);
+        return;
+      }
       var primeiro = String(d.nome || "").trim().split(" ")[0];
       $("[data-ok-titulo]").textContent = primeiro ? "Que alegria, " + primeiro + "!" : "Que alegria ter você aqui!";
       var itens = Object.keys(PASSOS).filter(function (k) { return d[k]; });
@@ -709,7 +716,8 @@
       $$(".extra", form).forEach(function (x) { x.hidden = true; });
       $("#cadastro").scrollIntoView({ behavior: "smooth" });
     });
-    $("[data-novo]").addEventListener("click", function () { ok.hidden = true; form.hidden = false; });
+    var novo = $("[data-novo]");
+    if (novo) novo.addEventListener("click", function () { ok.hidden = true; form.hidden = false; });
   }
 
   /* ---------- Página: Downloads ---------- */

@@ -272,6 +272,32 @@ legend{padding:0;margin-bottom:12px;font-size:12px;font-weight:700;letter-spacin
 .sucesso{background:var(--preto);color:#fff;border-radius:20px;padding:44px 28px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
 .sucesso ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;text-align:left;max-width:480px;width:100%}
 .sucesso li{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--preto2);border:1px solid rgba(225,198,106,.3);font-size:15px}
+/* Tela de obrigado da página Primeira vez (js/obrigado.js) */
+.obrigado{align-items:stretch;text-align:left;padding:30px 12px;margin:0 -10px;scroll-margin-top:90px}
+.obg-topo{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+.obg-logo{width:130px;height:auto;display:block}
+.obg-titulo{font-size:clamp(30px,4vw,42px);line-height:1.1;outline:none}
+.obg-texto{color:#E9E2D6;max-width:520px;font-size:16px;line-height:1.6}
+.obg-cards{display:flex;flex-direction:column;gap:12px;max-width:620px;width:100%;margin:10px auto 0}
+.obg-card{background:var(--preto2);border:1px solid rgba(225,198,106,.3);border-radius:14px;overflow:hidden}
+.obg-card[open]{border-color:var(--ouro)}
+.obg-card-topo{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:60px;cursor:pointer}
+.obg-card-topo::-webkit-details-marker{display:none}
+.obg-card-topo:focus-visible{outline:2px solid var(--ouro);outline-offset:-2px;border-radius:14px}
+.obg-icone{font-size:24px;line-height:1;flex:none}
+.obg-card-titulo{flex:1;min-width:0;font-family:var(--serif);font-size:22px;font-weight:600;line-height:1.2;color:#fff}
+.obg-seta{width:10px;height:10px;border-right:2px solid var(--ouro);border-bottom:2px solid var(--ouro);transform:rotate(45deg);transition:transform .2s;flex:none;margin:0 4px 4px 0}
+.obg-card[open] .obg-seta{transform:rotate(-135deg);margin:4px 4px 0 0}
+.obg-card-corpo{padding:2px 16px 20px;display:flex;flex-direction:column;gap:12px;color:#E9E2D6;font-size:16px;line-height:1.6}
+.obg-assinatura{font-family:var(--serif);font-style:italic;font-size:19px;color:var(--ouro)}
+.obg-subtitulo{font-weight:700;color:var(--ouro);margin-top:4px}
+.obg-lista{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.obg-lista li{display:list-item;padding:0 0 0 4px;background:none;border:0;border-radius:0;font-size:16px}
+.obg-lista li::marker{color:var(--ouro);font-weight:700}
+.obg-whats{align-self:stretch;margin-top:6px;text-align:center}
+.obg-rodape{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;margin-top:14px}
+.obg-convite{font-family:var(--serif);font-style:italic;font-size:22px;line-height:1.3;color:var(--ouro)}
+@media (min-width:561px){.obrigado{padding:44px 32px;margin:0}.obg-whats{align-self:flex-start}}
 .sucesso-claro{background:#fff;color:var(--texto);border-radius:18px;padding:36px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
 .check-ouro{width:64px;height:64px;border-radius:999px;background:var(--ouro);display:flex;align-items:center;justify-content:center}
 
