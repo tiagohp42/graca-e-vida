@@ -166,10 +166,9 @@
     }
     var lista = [
       { id: "culto", titulo: "Culto de celebração", d: proxDiaSemana(0, 19, 2.5), hora: "19h", desc: "Nossa reunião principal: louvor, Palavra e comunhão para toda a família." },
-      { id: "encontro", titulo: "Encontro do mês", d: mensal(segundaQuarta, 20), hora: "20h", desc: "Toda a igreja reunida na segunda quarta-feira do mês." },
-      { id: "oracao", titulo: "Encontro de oração", d: proxDiaSemana(5, 6, 15), hora: "6h e 20h", desc: "Comece ou termine a semana em oração com a gente." },
-      { id: "dozehoras", titulo: "12 horas de busca", d: mensal(ultimo(5), 0, 12), hora: "da meia-noite ao meio-dia", desc: "Um tempo contínuo de oração e adoração na última sexta do mês." },
-      { id: "jovens", titulo: "Noite dos jovens", d: mensal(ultimo(6), 20), hora: "20h", desc: "Louvor, Palavra e amizade para a juventude." }
+      { id: "macrocelula", titulo: "Macrocélula", d: mensal(segundaQuarta, 20), hora: "20h", desc: "Encontro das células, aqui na igreja, na segunda quarta-feira do mês. Traga sempre um prato de alimento." },
+      { id: "oracao", titulo: "Encontro de oração", d: proxDiaSemana(5, 20, 2), hora: "20h", desc: "Termine a semana em oração com a gente." },
+      { id: "jovens", titulo: "Arena UFC", d: mensal(ultimo(6), 20), hora: "20h", desc: "Culto de jovens no último sábado do mês: louvor, Palavra e amizade para a juventude." }
     ];
     lista.sort(function (a, b) { return a.d - b.d; });
     return lista;
