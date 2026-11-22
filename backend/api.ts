@@ -30,6 +30,7 @@ import { createRealtime, rawSql } from "@neon/realtime/server";
 import { Files } from "files-sdk";
 import { neon } from "files-sdk/neon";
 import { createHash, randomBytes } from "node:crypto";
+import { handleAuthProxyRequest } from "@neon/auth/server";
 
 const FUSO = "America/Sao_Paulo";
 const ORIGENS = [/^https:\/\/(www\.)?gracaevida\.com$/, /^https:\/\/tiagohp42\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
@@ -350,27 +351,21 @@ app.post("/mural/live", async (c) => {
   return c.json(await realtime.seal({ query: rawSql<LinhaMural>(SQL_MURAL) }));
 });
 
-/* ---------- login pelo próprio domínio ----------
-   A Vercel manda www.gracaevida.com/api/auth/* para cá, e repassamos ao Neon Auth com um pedido "limpo"
-   (o Neon Auth recusa o repasse direto da Vercel por causa do cabeçalho de host). Assim o cookie da sessão
-   fica no domínio do site e o login funciona no Safari/iPhone. Só repassa para o Neon Auth, nada mais. */
+/* ---------- login pelo próprio domínio (proxy oficial do Neon Better Auth) ----------
+   A Vercel manda www.gracaevida.com/api/auth/* para cá e o handleAuthProxyRequest do @neon/auth
+   repassa ao Managed Better Auth (o mesmo proxy que a Neon usa no Next.js). Assim os cookies da sessão
+   ficam no domínio do site e o login funciona no Safari/iPhone. */
 const AUTH_BASE = (process.env.NEON_AUTH_BASE_URL || "").replace(/\/$/, "");
-const AUTH_IDA = ["content-type", "cookie", "origin", "referer", "user-agent", "accept", "accept-language", "authorization"];
-const AUTH_VOLTA = ["content-type", "set-auth-jwt", "set-auth-token", "location", "cache-control"];
 app.all("/auth/*", async (c) => {
-  const resto = c.req.path.replace(/^\/auth\//, "");
-  if (!/^[a-z0-9/_-]*$/i.test(resto)) return c.json({ ok: false, erro: "caminho-invalido" }, 400);
-  const url = new URL(AUTH_BASE + "/" + resto);
-  url.search = new URL(c.req.url).search;
-  const cab = new Headers();
-  for (const h of AUTH_IDA) { const v = c.req.header(h); if (v) cab.set(h, v); }
-  const metodo = c.req.method;
-  const r = await fetch(url, { method: metodo, headers: cab, body: metodo === "GET" || metodo === "HEAD" ? undefined : await c.req.arrayBuffer(), redirect: "manual" });
-  const volta = new Headers();
-  for (const h of AUTH_VOLTA) { const v = r.headers.get(h); if (v) volta.set(h, v); }
-  // Cookies voltam sem "Domain", para ficarem no domínio do site
-  for (const ck of r.headers.getSetCookie()) volta.append("set-cookie", ck.replace(/;\s*domain=[^;]*/i, ""));
-  return new Response(r.body, { status: r.status, headers: volta });
+  const caminho = c.req.path.replace(/^\/auth\//, "");
+  if (!/^[a-z0-9/_-]+$/i.test(caminho)) return c.json({ ok: false, erro: "caminho-invalido" }, 400);
+  return handleAuthProxyRequest({
+    request: c.req.raw,
+    path: caminho,
+    baseUrl: AUTH_BASE,
+    cookieSecret: process.env.AUTH_COOKIE_SECRET!,
+    sameSite: "lax",
+  });
 });
 
 app.get("/convite", async (c) => {
