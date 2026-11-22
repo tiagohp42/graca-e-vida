@@ -45,10 +45,14 @@ p{margin:0}
 .cta-topo{padding:12px 20px;min-height:46px;font-size:14px;flex:none}
 .menu-btn{display:none;background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;width:48px;height:48px;align-items:center;justify-content:center;cursor:pointer;flex:none}
 .gaveta{display:none}
+/* Contribua no topo: só no celular/tablet, onde o menu de links some */
+.contrib-cel{display:none;padding:10px 14px;min-height:46px;font-size:14px;flex:none;gap:7px;background:transparent;color:var(--ouro);border:1.5px solid var(--ouro)}
+.contrib-cel:hover{color:#1A1208;background:var(--ouro)}
 
 @media (max-width:1180px){
   .links{display:none}
   .menu-btn{display:inline-flex}
+  .contrib-cel{display:inline-flex}
   .marca{border-right:0;padding-right:0}
   .marca img{height:54px}
   .topo nav{gap:10px}
@@ -64,7 +68,8 @@ p{margin:0}
   .gaveta-painel a.item[aria-current=page]{color:var(--ouro)}
   .gaveta-painel .btn{margin-top:16px}
 }
-@media (max-width:400px){.cta-topo{display:none !important}}
+/* Em telas estreitas não cabem os dois botões: fica o Contribua */
+@media (max-width:440px){.cta-topo{display:none !important}}
 @media (max-width:520px){
   .cta-topo .longo{display:none}
   .cta-topo{padding:10px 14px}
