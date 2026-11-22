@@ -45,5 +45,5 @@ ok((await fetch(`${API}/convite?token=${c2.token}`).then((r) => r.json())).valid
 const lista = (await api("/admin/equipe", sup)).json;
 const membro = lista.membros.find((m) => m.email === email);
 ok(!!membro, "membro aparece na lista da equipe");
-await api("/admin/equipe/remover", sup, { method: "POST", body: JSON.stringify({ user_id: membro.user_id }) });
+await api("/admin/equipe/acao", sup, { method: "POST", body: JSON.stringify({ user_id: membro.user_id, acao: "remover" }) });
 ok((await api("/admin/eu", novo)).status === 401, "acesso removido não entra mais");

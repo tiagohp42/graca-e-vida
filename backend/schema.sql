@@ -84,3 +84,43 @@ CREATE TABLE IF NOT EXISTS convites (
   usado_por   text,
   revogado    boolean NOT NULL DEFAULT false
 );
+
+-- Níveis de acesso da equipe (o dono, em SUPER_ADMIN_IDS, fica fora desta tabela)
+ALTER TABLE equipe ADD COLUMN IF NOT EXISTS nivel text NOT NULL DEFAULT 'admin';
+ALTER TABLE equipe ADD COLUMN IF NOT EXISTS bloqueado boolean NOT NULL DEFAULT false;
+-- Tokens emitidos antes deste horário deixam de valer (forçar logout / senha nova)
+ALTER TABLE equipe ADD COLUMN IF NOT EXISTS logout_em timestamptz;
+ALTER TABLE convites ADD COLUMN IF NOT EXISTS nivel text NOT NULL DEFAULT 'admin';
+DO $$ BEGIN
+  ALTER TABLE equipe ADD CONSTRAINT equipe_nivel_ck CHECK (nivel IN ('super', 'admin', 'editor', 'tesouraria', 'lider', 'midia'));
+  ALTER TABLE convites ADD CONSTRAINT convites_nivel_ck CHECK (nivel IN ('super', 'admin', 'editor', 'tesouraria', 'lider', 'midia'));
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Histórico: quem fez o quê e quando
+CREATE TABLE IF NOT EXISTS atividades (
+  id        bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  quando    timestamptz NOT NULL DEFAULT now(),
+  user_id   text NOT NULL,
+  email     text NOT NULL,
+  acao      text NOT NULL,
+  alvo      text,
+  detalhes  jsonb
+);
+CREATE INDEX IF NOT EXISTS atividades_user_idx ON atividades (user_id, quando DESC);
+
+-- Eventos especiais criados pela área admin (a agenda semanal continua no js/config.js)
+CREATE TABLE IF NOT EXISTS eventos (
+  id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  titulo        text NOT NULL,
+  descricao     text,
+  data          date NOT NULL,
+  horario       text,
+  local         text,
+  vagas         int CHECK (vagas IS NULL OR vagas > 0),
+  arte_chave    text,
+  publicado     boolean NOT NULL DEFAULT true,
+  criado_por    text NOT NULL,
+  criado_em     timestamptz NOT NULL DEFAULT now(),
+  atualizado_em timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS eventos_data_idx ON eventos (data) WHERE publicado;

@@ -39,6 +39,21 @@
   .adm .novo-link{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   .adm .novo-link input{flex:1 1 280px;min-width:0;font-size:13px}
   .adm .cartao table td,.adm .cartao table th{padding:8px 10px}
+  .adm select,.adm textarea{font:inherit;padding:10px 12px;border:1.5px solid var(--borda);border-radius:8px;background:#fff}
+  .adm textarea{min-height:90px;resize:vertical}
+  .adm .grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .adm .grade .campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .adm .grade .largo{grid-column:1/-1}
+  .adm .linha-botoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .adm .acoes{display:flex;gap:6px;flex-wrap:wrap}
+  .adm .acoes .btn{min-height:36px;padding:6px 10px;font-size:13px}
+  .adm .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#efe6d2;white-space:nowrap}
+  .adm .tag.bloq{background:#f6d6d6;color:#7a1414}
+  .adm .tag.dono{background:var(--preto);color:var(--ouro)}
+  .adm .aviso{background:#fff8e6;border:1px solid #e9d49a;border-radius:10px;padding:12px 14px;margin-top:12px;font-size:14px}
+  .adm .aviso code{font-size:15px;font-weight:700;user-select:all}
+  .adm img.mini{width:72px;height:48px;object-fit:cover;border-radius:6px;display:block}
+  .adm [data-painel] > section[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -78,28 +93,74 @@
   </form>
 
   <section data-painel hidden>
-    <div class="abas">
-      <button class="btn btn-borda btn-sm" type="button" data-aba="oracao" aria-pressed="true">Pedidos de oração</button>
-      <button class="btn btn-borda btn-sm" type="button" data-aba="visitantes" aria-pressed="false">Visitantes</button>
-      <button class="btn btn-borda btn-sm" type="button" data-aba="inscricoes" aria-pressed="false">Inscrições</button>
-      <button class="btn btn-borda btn-sm" type="button" data-aba="equipe" aria-pressed="false" data-so-super hidden>Equipe</button>
-      <button class="btn btn-ouro btn-sm" type="button" data-exportar>Exportar CSV</button>
-    </div>
+    <div class="abas" data-abas></div>
     <p class="msg" data-status></p>
-    <div class="tabela" data-tabela></div>
-    <div class="equipe" data-equipe hidden>
+
+    <!-- Cadastros: pedidos de oração, visitantes, inscrições -->
+    <section data-sec="tabela" hidden>
+      <div class="linha-botoes" style="margin:0 0 12px"><button class="btn btn-ouro btn-sm" type="button" data-exportar hidden>Exportar CSV</button></div>
+      <div class="tabela" data-tabela></div>
+    </section>
+
+    <!-- Eventos -->
+    <section class="equipe" data-sec="eventos" hidden>
+      <form class="cartao" data-form-evento>
+        <h2 data-ev-titulo-form>Novo evento</h2>
+        <input type="hidden" name="id">
+        <div class="grade">
+          <div class="campo largo"><label class="lbl" for="ev-t">Nome do evento *</label><input id="ev-t" name="titulo" required maxlength="120"></div>
+          <div class="campo"><label class="lbl" for="ev-d">Data *</label><input id="ev-d" name="data" type="date" required></div>
+          <div class="campo"><label class="lbl" for="ev-h">Horário</label><input id="ev-h" name="horario" maxlength="40" placeholder="19h30"></div>
+          <div class="campo"><label class="lbl" for="ev-l">Local</label><input id="ev-l" name="local" maxlength="160" placeholder="Rua Independência, 259"></div>
+          <div class="campo"><label class="lbl" for="ev-v">Vagas</label><input id="ev-v" name="vagas" type="number" min="1" placeholder="Sem limite"></div>
+          <div class="campo largo"><label class="lbl" for="ev-ds">Descrição</label><textarea id="ev-ds" name="descricao" maxlength="1000"></textarea></div>
+          <div class="campo"><label class="lbl" for="ev-a">Arte (JPG, PNG ou WebP, até 5 MB; melhor na horizontal)</label><input id="ev-a" name="arte" type="file" accept="image/jpeg,image/png,image/webp"></div>
+          <div class="campo" style="justify-content:flex-end"><label class="check"><input type="checkbox" name="publicado" checked> Mostrar no site</label></div>
+        </div>
+        <div class="linha-botoes">
+          <button class="btn btn-preto btn-sm" type="submit">Salvar evento</button>
+          <button class="btn btn-borda btn-sm" type="button" data-ev-cancelar hidden>Cancelar edição</button>
+        </div>
+      </form>
+      <div class="cartao"><h2>Eventos</h2><div class="tabela" data-lista-eventos></div></div>
+    </section>
+
+    <!-- Equipe e permissões (só super admin) -->
+    <section class="equipe" data-sec="equipe" hidden>
       <div class="cartao">
-        <h2>Convidar para a equipe</h2>
-        <p class="msg">Gere um link e mande para a pessoa. Ela cria a conta por ele e já entra com acesso aos cadastros. Cada link vale 7 dias e uma vez só.</p>
-        <button class="btn btn-preto btn-sm" type="button" data-gerar>Criar link de cadastro</button>
+        <h2>Criar usuário</h2>
+        <p class="msg">A conta é criada na hora com uma senha provisória. Passe o e-mail e a senha para a pessoa.</p>
+        <form data-form-usuario>
+          <div class="grade">
+            <div class="campo"><label class="lbl" for="us-n">Nome *</label><input id="us-n" name="nome" required maxlength="80"></div>
+            <div class="campo"><label class="lbl" for="us-e">E-mail *</label><input id="us-e" name="email" type="email" required></div>
+            <div class="campo"><label class="lbl" for="us-v">Nível *</label><select id="us-v" name="nivel" data-niveis></select></div>
+            <div class="campo"><label class="lbl" for="us-s">Senha provisória *</label><input id="us-s" name="senha" required minlength="8"></div>
+          </div>
+          <div class="linha-botoes"><button class="btn btn-preto btn-sm" type="submit">Criar usuário</button></div>
+        </form>
+        <div class="aviso" data-aviso-usuario hidden></div>
+      </div>
+      <div class="cartao">
+        <h2>Convidar por link</h2>
+        <p class="msg">A pessoa cria a própria conta pelo link. Vale 7 dias e uma vez só.</p>
+        <div class="linha-botoes">
+          <label class="lbl" for="cv-n">Nível</label><select id="cv-n" data-niveis data-nivel-convite></select>
+          <button class="btn btn-preto btn-sm" type="button" data-gerar>Criar link de cadastro</button>
+        </div>
         <div class="novo-link" data-novo-link hidden>
           <input type="text" readonly data-link aria-label="Link de cadastro">
           <button class="btn btn-ouro btn-sm" type="button" data-copiar>Copiar</button>
         </div>
       </div>
-      <div class="cartao"><h2>Membros</h2><div class="tabela" data-membros></div></div>
+      <div class="cartao"><h2>Usuários e permissões</h2><div class="tabela" data-membros></div></div>
       <div class="cartao"><h2>Links criados</h2><div class="tabela" data-convites></div></div>
-    </div>
+    </section>
+
+    <!-- Histórico -->
+    <section data-sec="historico" hidden>
+      <div class="tabela" data-historico></div>
+    </section>
   </section>
 </main>
 <script src="../js/config.js"></script>

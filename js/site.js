@@ -31,7 +31,7 @@
   var API = (C.NEON_API_URL || "").trim().replace(/\/$/, "");
   var temApi = /^https:\/\//.test(API);
   function apiGet(acao, extra) {
-    var neon = acao === "mural", base = neon ? API : API_DRIVE;
+    var neon = acao === "mural" || acao === "eventos", base = neon ? API : API_DRIVE;
     if (!(neon ? temApi : temDrive)) return Promise.reject(new Error("sem-api"));
     var url = base + (neon ? "/" : "") + "?acao=" + encodeURIComponent(acao) + (extra || "") + "&t=" + Date.now();
     return fetch(url, { method: "GET", redirect: "follow" }).then(function (r) { return r.json(); }).then(function (j) {
@@ -493,32 +493,48 @@
   /* ---------- Página: Eventos ---------- */
   function eventos() {
     var box = $("[data-agenda]"), sel = $("[data-select-eventos]");
-    var lista = agenda(new Date());
-    var D = C.EVENTO_DESTAQUE;
-    var temDestaque = !!(D && D.titulo);
-    if (temDestaque) {
-      var sec = $("[data-destaque]"); sec.hidden = false;
-      $("[data-d-titulo]").textContent = D.titulo;
-      $("[data-d-desc]").textContent = D.descricao || "";
-      var q = "";
-      if (D.data) { var p = D.data.split("-"); var dd = new Date(+p[0], +p[1] - 1, +p[2]); q = DIAS[dd.getDay()] + ", " + dm(dd); }
-      $("[data-d-quando]").textContent = q + (D.horario ? " · " + D.horario : "");
-      if (D.local) $("[data-d-local]").textContent = D.local;
-      if (D.vagas) $("[data-d-vagas]").textContent = D.vagas + " vagas"; else $("[data-d-vagas-box]").hidden = true;
-      if (D.arte) { var img = $("[data-d-arte]"); img.src = /^https?:/.test(D.arte) ? D.arte : ROOT + D.arte.replace(/^\//, ""); img.hidden = false; }
+    // Desenha destaque, agenda e opções do formulário. "extras" são os eventos criados na área da equipe.
+    function desenhar(D, extras) {
+      var lista = agenda(new Date()).concat(extras).sort(function (a, b) { return a.d - b.d; });
+      var temDestaque = !!(D && D.titulo);
+      var sec = $("[data-destaque]"); sec.hidden = !temDestaque;
+      if (temDestaque) {
+        $("[data-d-titulo]").textContent = D.titulo;
+        $("[data-d-desc]").textContent = D.descricao || "";
+        var q = "";
+        if (D.data) { var p = D.data.split("-"); var dd = new Date(+p[0], +p[1] - 1, +p[2]); q = DIAS[dd.getDay()] + ", " + dm(dd); }
+        $("[data-d-quando]").textContent = q + (D.horario ? " · " + D.horario : "");
+        if (D.local) $("[data-d-local]").textContent = D.local;
+        if (D.vagas) { $("[data-d-vagas]").textContent = D.vagas + " vagas"; $("[data-d-vagas-box]").hidden = false; } else $("[data-d-vagas-box]").hidden = true;
+        var img = $("[data-d-arte]");
+        if (D.arte) { img.src = /^https?:/.test(D.arte) ? D.arte : ROOT + D.arte.replace(/^\//, ""); img.hidden = false; } else img.hidden = true;
+      }
+      box.innerHTML = lista.map(function (e) {
+        return '<article class="evento">' +
+          '<div class="data-box"><b>' + e.d.getDate() + '</b><small>' + MESES_M[e.d.getMonth()] + '</small></div>' +
+          '<div class="txt"><h3>' + esc(e.titulo) + '</h3><p class="quando">' + DIAS[e.d.getDay()] + (e.hora ? ' · ' + esc(e.hora) : "") + '</p><p class="desc">' + esc(e.desc) + '</p></div>' +
+          '<button type="button" class="btn btn-borda btn-sm" data-inscrever="' + e.id + '">Inscrever-se</button></article>';
+      }).join("");
+      var opcoes = [];
+      if (temDestaque) opcoes.push('<option value="' + esc(D.titulo) + '">' + esc(D.titulo) + (D.data ? " · " + esc(D.data.split("-").reverse().slice(0, 2).join("/")) : "") + "</option>");
+      lista.forEach(function (e) {
+        opcoes.push('<option value="' + esc(e.titulo + " · " + dm(e.d) + "/" + e.d.getFullYear()) + '" data-id="' + e.id + '">' + esc(e.titulo + " · " + dm(e.d)) + "</option>");
+      });
+      sel.innerHTML = opcoes.join("");
     }
-    box.innerHTML = lista.map(function (e) {
-      return '<article class="evento">' +
-        '<div class="data-box"><b>' + e.d.getDate() + '</b><small>' + MESES_M[e.d.getMonth()] + '</small></div>' +
-        '<div class="txt"><h3>' + esc(e.titulo) + '</h3><p class="quando">' + DIAS[e.d.getDay()] + ' · ' + esc(e.hora) + '</p><p class="desc">' + esc(e.desc) + '</p></div>' +
-        '<button type="button" class="btn btn-borda btn-sm" data-inscrever="' + e.id + '">Inscrever-se</button></article>';
-    }).join("");
-    var opcoes = [];
-    if (temDestaque) opcoes.push('<option value="' + esc(D.titulo) + '">' + esc(D.titulo) + (D.data ? " · " + esc(D.data.split("-").reverse().slice(0, 2).join("/")) : "") + "</option>");
-    lista.forEach(function (e) {
-      opcoes.push('<option value="' + esc(e.titulo + " · " + dm(e.d) + "/" + e.d.getFullYear()) + '" data-id="' + e.id + '">' + esc(e.titulo + " · " + dm(e.d)) + "</option>");
-    });
-    sel.innerHTML = opcoes.join("");
+    var D0 = C.EVENTO_DESTAQUE && C.EVENTO_DESTAQUE.titulo ? C.EVENTO_DESTAQUE : null;
+    desenhar(D0, []);
+    // Eventos do banco: o primeiro vira destaque (se o config.js não tiver um) e os outros entram na agenda
+    apiGet("eventos").then(function (j) {
+      var evs = j.eventos || [];
+      if (!evs.length) return;
+      var D = D0 || evs[0];
+      var extras = evs.filter(function (e) { return e !== D; }).map(function (e) {
+        var p = e.data.split("-");
+        return { id: "ev" + e.id, titulo: e.titulo, d: new Date(+p[0], +p[1] - 1, +p[2], 12), hora: e.horario || "", desc: [e.descricao, e.local].filter(Boolean).join(" · ") };
+      });
+      desenhar(D, extras);
+    }, function () {});
     document.addEventListener("click", function (ev) {
       var b = ev.target.closest("[data-inscrever]");
       if (!b) return;

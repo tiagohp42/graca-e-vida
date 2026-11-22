@@ -23,6 +23,8 @@ export default defineConfig({
   buckets: {
     // "private" is the default; use "public_read" for anonymous reads
     assets: { access: "private" },
+    // Artes dos eventos, mostradas no site
+    eventos: { access: "public_read" },
   },
   // Branch policy: per-branch tuning
   branch: (branch) => {

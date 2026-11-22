@@ -9,7 +9,8 @@
     "deploy": "neon deploy --env .env.local",
     "start": "npx --yes http-server -p 8080 -c-1 .",
     "test:admin": "node --env-file=.env.local scripts/teste-admin.mjs",
-    "test:equipe": "node --env-file=.env.local scripts/teste-equipe.mjs"
+    "test:equipe": "node --env-file=.env.local scripts/teste-equipe.mjs",
+    "test:niveis": "node --env-file=.env.local scripts/teste-niveis.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1175.0",

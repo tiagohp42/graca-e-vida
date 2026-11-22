@@ -84,17 +84,28 @@ Nas páginas de PIX (Contribua) o botão flutuante não aparece, para não cobri
 
 Os formulários (visitante, inscrição, pedido de oração) e o mural de oração gravam no banco **Neon** (projeto `winter-rice-57955028`, branch `production`). A planilha não recebe mais esses dados.
 
-- **Área da equipe:** `/admin/` no site. Lá dá para ver visitantes, inscrições e pedidos, **aprovar pedidos para o mural** e exportar CSV.
-  - **Super admin:** a conta tiagoesamia@gmail.com (pelo id da conta, em `SUPER_ADMIN_IDS` no `.env.local`). Só o super admin vê a aba **Equipe**.
-  - **Dar acesso a alguém:** aba Equipe › **Criar link de cadastro** › Copiar e mandar para a pessoa. O link vale 7 dias e uma vez só; a pessoa cria a conta por ele e já entra. Na mesma aba dá para cancelar links e tirar o acesso de alguém.
-  - Não existe mais "Criar conta" na tela de login: sem link de convite, ninguém entra.
+- **Área da equipe:** `/admin/` no site. Cada pessoa vê só as abas do seu nível:
+
+  | Nível | O que vê e faz |
+  |---|---|
+  | **Super Admin** | tudo + aba **Usuários** (criar, convidar, mudar nível, redefinir senha, forçar logout, bloquear, excluir) e o histórico de toda a equipe |
+  | Admin | pedidos de oração, visitantes, inscrições, aprovar no mural, eventos, exportar CSV |
+  | Editor de conteúdo | eventos + pedidos do mural (aprovar/tirar) |
+  | Tesouraria | inscrições + exportar CSV |
+  | Líder de célula | visitantes que pediram célula (só leitura) |
+  | Mídia | eventos (criar, editar, arte) |
+
+  - **Dono:** a conta tiagoesamia@gmail.com (pelo id da conta, em `SUPER_ADMIN_IDS` no `.env.local`). Ninguém consegue bloquear, excluir ou mudar o nível do dono pelo painel. Ela tem o papel "admin" no Neon Auth, que é o que permite trocar senha, desconectar, bloquear e excluir contas.
+  - **Dar acesso:** aba Usuários › **Criar usuário** (conta pronta com senha provisória) ou **Criar link de cadastro** (a pessoa cria a própria conta; vale 7 dias, uma vez só). Os dois pedem o nível.
+  - **Histórico:** tudo o que muda (aprovar no mural, exportar, eventos, usuários) fica registrado com quem fez e quando. Cada pessoa vê o próprio; o Super Admin vê o de todos.
+  - **Eventos:** aba Eventos › preencha e salve. O evento aparece na página Eventos (o primeiro da lista vira o destaque, se o `config.js` não tiver um) e entra no formulário de inscrição. As artes ficam no bucket público `eventos` da Neon. A agenda semanal continua no `config.js`.
 - **Mural ao vivo:** pedidos aprovados e o contador "Orei por você" aparecem sem recarregar a página (Neon Realtime).
 - **Código:** API em `backend/api.ts` (Neon Function `api`), tabelas em `backend/schema.sql`, telas em `src/` (o `npm run build` gera `js/admin.js` e `js/mural-live.js`; esses dois arquivos vão para o GitHub).
 - **Comandos** (precisa do Node e do `neon` instalados, e do `.env.local`, que nunca vai para o GitHub):
   - `npm run build` · gera os scripts do site
   - `npm run db:migrate` · cria/atualiza as tabelas
   - `npm run deploy` · publica a API e os serviços do `neon.ts`
-  - `npm run test:admin` e `npm run test:equipe` · testam login, área da equipe, links de cadastro e exportação (a conta de teste precisa estar em `SUPER_ADMIN_IDS` enquanto roda; veja o `.env.local`)
+  - `npm run test:admin`, `npm run test:equipe` e `npm run test:niveis` · testam login, níveis, links de cadastro, ações de usuários, histórico, eventos e exportação. Antes de rodar, a conta de teste (veja o `.env.local`) precisa estar na equipe como `super` e ter o papel admin (`neon neon-auth user set-role <id> --roles admin`); depois, tire os dois
 
 ## Planilha e Apps Script
 
