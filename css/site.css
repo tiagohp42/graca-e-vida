@@ -210,6 +210,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ouro-esc
 .evento h3{font-size:21px}
 .evento .quando{font-size:14px;font-weight:600;color:var(--ouro-escuro)}
 .evento .desc{font-size:14px;color:#4A4036}
+.evento .livre{font-size:13px;font-weight:600;color:var(--ouro-escuro);white-space:nowrap}
+.evento.especial{box-shadow:inset 0 0 0 1.5px var(--ouro),0 1px 3px rgba(11,9,7,.06)}
 @media (max-width:560px){
   .evento{padding:16px;gap:12px 14px}
   .evento .txt{flex:1 1 0}

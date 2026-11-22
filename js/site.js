@@ -509,18 +509,25 @@
         var img = $("[data-d-arte]");
         if (D.arte) { img.src = /^https?:/.test(D.arte) ? D.arte : ROOT + D.arte.replace(/^\//, ""); img.hidden = false; } else img.hidden = true;
       }
+      // A agenda fixa da igreja é aberta a todos: só os eventos especiais pedem inscrição
       box.innerHTML = lista.map(function (e) {
-        return '<article class="evento">' +
+        return '<article class="evento' + (e.especial ? ' especial' : '') + '">' +
           '<div class="data-box"><b>' + e.d.getDate() + '</b><small>' + MESES_M[e.d.getMonth()] + '</small></div>' +
           '<div class="txt"><h3>' + esc(e.titulo) + '</h3><p class="quando">' + DIAS[e.d.getDay()] + (e.hora ? ' · ' + esc(e.hora) : "") + '</p><p class="desc">' + esc(e.desc) + '</p></div>' +
-          '<button type="button" class="btn btn-borda btn-sm" data-inscrever="' + e.id + '">Inscrever-se</button></article>';
+          (e.especial
+            ? '<button type="button" class="btn btn-borda btn-sm" data-inscrever="' + e.id + '">Inscrever-se</button>'
+            : '<span class="livre">Aberto a todos · sem inscrição</span>') +
+          '</article>';
       }).join("");
       var opcoes = [];
       if (temDestaque) opcoes.push('<option value="' + esc(D.titulo) + '">' + esc(D.titulo) + (D.data ? " · " + esc(D.data.split("-").reverse().slice(0, 2).join("/")) : "") + "</option>");
       lista.forEach(function (e) {
+        if (!e.especial) return;
         opcoes.push('<option value="' + esc(e.titulo + " · " + dm(e.d) + "/" + e.d.getFullYear()) + '" data-id="' + e.id + '">' + esc(e.titulo + " · " + dm(e.d)) + "</option>");
       });
       sel.innerHTML = opcoes.join("");
+      // Sem evento especial, não há o que inscrever: a seção de inscrição some
+      $("#inscricao").hidden = opcoes.length === 0;
     }
     var D0 = C.EVENTO_DESTAQUE && C.EVENTO_DESTAQUE.titulo ? C.EVENTO_DESTAQUE : null;
     desenhar(D0, []);
@@ -531,7 +538,7 @@
       var D = D0 || evs[0];
       var extras = evs.filter(function (e) { return e !== D; }).map(function (e) {
         var p = e.data.split("-");
-        return { id: "ev" + e.id, titulo: e.titulo, d: new Date(+p[0], +p[1] - 1, +p[2], 12), hora: e.horario || "", desc: [e.descricao, e.local].filter(Boolean).join(" · ") };
+        return { id: "ev" + e.id, especial: true, titulo: e.titulo, d: new Date(+p[0], +p[1] - 1, +p[2], 12), hora: e.horario || "", desc: [e.descricao, e.local].filter(Boolean).join(" · ") };
       });
       desenhar(D, extras);
     }, function () {});
