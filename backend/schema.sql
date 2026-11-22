@@ -124,3 +124,6 @@ CREATE TABLE IF NOT EXISTS eventos (
   atualizado_em timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS eventos_data_idx ON eventos (data) WHERE publicado;
+
+-- Evento especial pede inscrição? (a maioria pede; desmarque no painel quando não precisar)
+ALTER TABLE eventos ADD COLUMN IF NOT EXISTS inscricao boolean NOT NULL DEFAULT true;

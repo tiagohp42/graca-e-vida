@@ -238,8 +238,8 @@ const ARTE_URL = (process.env.AWS_ENDPOINT_URL_S3 || "").replace(/\/$/, "") + "/
 const ARTE_TIPOS: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const ARTE_MAX = 5 * 1024 * 1024;
 
-type Evento = { id: string; titulo: string; descricao: string | null; data: string; horario: string | null; local: string | null; vagas: number | null; arte_chave: string | null; publicado: boolean };
-const SQL_EVENTO = "SELECT id, titulo, descricao, to_char(data, 'YYYY-MM-DD') AS data, horario, local, vagas, arte_chave, publicado FROM eventos";
+type Evento = { id: string; titulo: string; descricao: string | null; data: string; horario: string | null; local: string | null; vagas: number | null; arte_chave: string | null; publicado: boolean; inscricao: boolean };
+const SQL_EVENTO = "SELECT id, titulo, descricao, to_char(data, 'YYYY-MM-DD') AS data, horario, local, vagas, arte_chave, publicado, inscricao FROM eventos";
 const comArte = (e: Evento) => ({ ...e, id: String(e.id), arte: e.arte_chave ? ARTE_URL + e.arte_chave : null });
 
 /* ---------- rotas ---------- */
@@ -465,20 +465,20 @@ app.post("/admin/eventos", podeEventos, async (c) => {
   const titulo = txt(d.titulo, 120), dia = data(d.data);
   if (!titulo || !dia) return c.json({ ok: false, erro: "faltam-dados" }, 400);
   const vagas = d.vagas === "" || d.vagas == null ? null : Math.max(1, Math.min(100000, parseInt(String(d.vagas), 10) || 0)) || null;
-  const valores = [titulo, txt(d.descricao, 1000) || null, dia, txt(d.horario, 40) || null, txt(d.local, 160) || null, vagas, d.publicado !== false];
+  const valores = [titulo, txt(d.descricao, 1000) || null, dia, txt(d.horario, 40) || null, txt(d.local, 160) || null, vagas, d.publicado !== false, d.inscricao !== false];
   const id = txt(d.id, 20);
   let linha: Evento | undefined;
   if (/^\d+$/.test(id)) {
     ({ rows: [linha] } = await pool.query<Evento>(
-      `UPDATE eventos SET titulo=$2, descricao=$3, data=$4, horario=$5, local=$6, vagas=$7, publicado=$8, atualizado_em=now()
+      `UPDATE eventos SET titulo=$2, descricao=$3, data=$4, horario=$5, local=$6, vagas=$7, publicado=$8, inscricao=$9, atualizado_em=now()
        WHERE id = $1 RETURNING id`, [id, ...valores],
     ));
     if (!linha) return c.json({ ok: false, erro: "nao-encontrado" }, 404);
     await registrar(a, "editou evento", titulo, { evento: id });
   } else {
     ({ rows: [linha] } = await pool.query<Evento>(
-      `INSERT INTO eventos (titulo, descricao, data, horario, local, vagas, publicado, criado_por)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`, [...valores, a.email],
+      `INSERT INTO eventos (titulo, descricao, data, horario, local, vagas, publicado, inscricao, criado_por)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`, [...valores, a.email],
     ));
     await registrar(a, "criou evento", titulo, { evento: linha!.id });
   }

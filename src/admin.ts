@@ -167,7 +167,7 @@ exportar.addEventListener("click", async () => {
 });
 
 /* ---------- eventos ---------- */
-type Evento = { id: string; titulo: string; descricao: string | null; data: string; horario: string | null; local: string | null; vagas: number | null; publicado: boolean; arte: string | null };
+type Evento = { id: string; titulo: string; descricao: string | null; data: string; horario: string | null; local: string | null; vagas: number | null; publicado: boolean; inscricao: boolean; arte: string | null };
 let eventos: Evento[] = [];
 
 async function carregarEventos() {
@@ -177,7 +177,7 @@ async function carregarEventos() {
     $("[data-lista-eventos]").innerHTML = eventos.length === 0 ? vazio("Nenhum evento criado ainda.") :
       "<table><thead><tr><th>Arte</th><th>Evento</th><th>Data</th><th>Situação</th><th></th></tr></thead><tbody>" +
       eventos.map((v) => "<tr><td>" + (v.arte ? '<img class="mini" src="' + esc(v.arte) + '" alt="">' : "—") + "</td><td><b>" + esc(v.titulo) + "</b><br>" +
-        esc([v.horario, v.local].filter(Boolean).join(" · ")) + "</td><td>" + esc(v.data.split("-").reverse().join("/")) + "</td><td>" +
+        esc([v.horario, v.local].filter(Boolean).join(" · ")) + "<br><small>" + (v.inscricao ? "Com inscrição" : "Sem inscrição") + "</small></td><td>" + esc(v.data.split("-").reverse().join("/")) + "</td><td>" +
         (v.data < hoje ? '<span class="tag">Já passou</span>' : v.publicado ? '<span class="tag">No site</span>' : '<span class="tag bloq">Escondido</span>') +
         '</td><td><div class="acoes"><button class="btn btn-borda" type="button" data-ev-editar="' + esc(v.id) + '">Editar</button>' +
         '<button class="btn btn-borda" type="button" data-ev-excluir="' + esc(v.id) + '">Excluir</button></div></td></tr>').join("") +
@@ -203,7 +203,7 @@ formEvento.addEventListener("submit", async (e) => {
       method: "POST",
       body: JSON.stringify({
         id: fd.get("id"), titulo: fd.get("titulo"), data: fd.get("data"), horario: fd.get("horario"), local: fd.get("local"),
-        vagas: fd.get("vagas"), descricao: fd.get("descricao"), publicado: fd.get("publicado") === "on",
+        vagas: fd.get("vagas"), descricao: fd.get("descricao"), publicado: fd.get("publicado") === "on", inscricao: fd.get("inscricao") === "on",
       }),
     });
     if (arte && arte.size > 0) await api("/admin/eventos/" + id + "/arte", { method: "POST", headers: { "Content-Type": arte.type }, body: arte });
@@ -229,6 +229,7 @@ $("[data-lista-eventos]").addEventListener("click", async (e) => {
     set("id", v.id); set("titulo", v.titulo); set("data", v.data); set("horario", v.horario); set("local", v.local);
     set("vagas", v.vagas); set("descricao", v.descricao);
     (f.namedItem("publicado") as HTMLInputElement).checked = v.publicado;
+    (f.namedItem("inscricao") as HTMLInputElement).checked = v.inscricao;
     $("[data-ev-titulo-form]").textContent = "Editar evento";
     $("[data-ev-cancelar]").hidden = false;
     formEvento.scrollIntoView({ behavior: "smooth" });
