@@ -2,7 +2,7 @@
   "buildCommand": "npm run build && node scripts/vercel-public.mjs",
   "outputDirectory": "public",
   "routes": [
-    { "src": "/api/auth/(.*)", "dest": "https://ep-broad-waterfall-bdztexep.neonauth.c-8.us-east-2.aws.neon.tech/neondb/auth/$1" },
+    { "src": "/api/auth/(.*)", "dest": "https://br-patient-silence-bd1vilfb-api.compute.c-8.us-east-2.aws.neon.tech/auth/$1" },
     { "handle": "filesystem" },
     { "src": "/equipe/(pedidos|visitantes|inscricoes|eventos|usuarios|historico)(/[0-9]*)?/?", "dest": "/equipe/index.html" },
     { "src": "/(.*)", "status": 404, "dest": "/404.html" }

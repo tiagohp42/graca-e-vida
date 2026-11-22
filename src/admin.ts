@@ -6,8 +6,8 @@ type Config = { NEON_API_URL?: string; NEON_AUTH_URL?: string };
 const C: Config = (window as unknown as { CGV_CONFIG?: Config }).CGV_CONFIG || {};
 const API = (C.NEON_API_URL || "").replace(/\/$/, "");
 // No site oficial o login passa por www.gracaevida.com/api/auth (a Vercel repassa para o Neon Auth):
-// assim o cookie da sessão é do próprio site e funciona no Safari/iPhone. Fora dele, usa o Neon Auth direto.
-const AUTH_URL = /(^|\.)gracaevida\.com$/.test(location.hostname) ? location.origin + "/api/auth" : (C.NEON_AUTH_URL || "");
+// assim o cookie da sessão é do próprio site e funciona no Safari/iPhone. O Preview da Vercel usa o mesmo caminho; fora deles, o Neon Auth direto.
+const AUTH_URL = /(^|\.)gracaevida\.com$|\.vercel\.app$/.test(location.hostname) ? location.origin + "/api/auth" : (C.NEON_AUTH_URL || "");
 
 // Métodos do Neon Auth usados aqui. token() vem do plugin JWT e admin.* do plugin de admin
 // (só funcionam para contas com papel "admin" no Neon Auth, ou seja, o super admin).
