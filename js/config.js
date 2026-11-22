@@ -183,3 +183,11 @@ window.CGV_CONFIG = {
   // Horário do culto ao vivo (0 = domingo). O player aparece 15 min antes do início.
   AO_VIVO: { diaDaSemana: 0, inicio: "19:00", fim: "21:30" }
 };
+
+/* PREVIEW DA FASE 0 (só no branch fase-0; sai antes de ir para produção):
+   no endereço de teste da Vercel (*.vercel.app) o site usa a branch de teste do banco. */
+if (/\.vercel\.app$/.test(location.hostname)) {
+  window.CGV_CONFIG.NEON_API_URL = "https://br-patient-silence-bd1vilfb-api.compute.c-8.us-east-2.aws.neon.tech";
+  window.CGV_CONFIG.NEON_AUTH_URL = "https://ep-late-mountain-bdpywhdc.neonauth.c-8.us-east-2.aws.neon.tech/neondb/auth";
+  window.CGV_CONFIG.NEON_REALTIME_URL = "wss://ep-late-mountain-bdpywhdc.rt.c-8.us-east-2.aws.neon.tech/";
+}

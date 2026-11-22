@@ -127,3 +127,6 @@ CREATE INDEX IF NOT EXISTS eventos_data_idx ON eventos (data) WHERE publicado;
 
 -- Evento especial pede inscrição? (a maioria pede; desmarque no painel quando não precisar)
 ALTER TABLE eventos ADD COLUMN IF NOT EXISTS inscricao boolean NOT NULL DEFAULT true;
+
+-- Fase 0: quando o pedido foi retirado do mural (migração em backend/migracoes/0001_fase0.sql)
+ALTER TABLE pedidos_oracao ADD COLUMN IF NOT EXISTS retirado_em timestamptz;

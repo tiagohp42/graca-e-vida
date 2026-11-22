@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Área da equipe · Comunidade Graça e Vida</title>
+<meta name="theme-color" content="#0B0907">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+<style>
+  body{background:var(--creme);margin:0}
+  .adm-cab{background:var(--preto);border-bottom:1px solid rgba(225,198,106,.18)}
+  .adm-cab .in{max-width:1100px;margin:0 auto;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .adm-cab img{height:44px;width:auto;display:block}
+  .adm-cab .btn-claro{min-height:42px;padding:10px 16px}
+  .adm{max-width:1100px;margin:0 auto;padding:36px 16px 64px}
+  .adm h1{font-family:var(--serif);font-size:38px;line-height:1.1;margin:0 0 6px;color:var(--texto)}
+  .adm .titulo{margin-bottom:24px}
+  .adm .titulo.so-login{text-align:center}
+  .adm form.login{max-width:400px;margin:0 auto;display:flex;flex-direction:column;gap:12px;background:#fff;padding:28px;border-radius:14px;border:1px solid var(--borda);box-shadow:0 10px 30px rgba(23,18,13,.06)}
+  .adm form.login .btn{width:100%}
+  .adm form.login .lbl{margin-top:4px}
+  .adm input{font:inherit;padding:12px;border:1.5px solid var(--borda);border-radius:8px}
+  .adm .abas{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .adm .abas button[aria-pressed=true]{background:var(--preto);color:#fff}
+  .adm .tabela{overflow-x:auto;background:#fff;border:1px solid var(--borda);border-radius:12px}
+  .adm table{border-collapse:collapse;width:100%;font-size:14px}
+  .adm th,.adm td{padding:10px 12px;border-bottom:1px solid #eee4d2;text-align:left;vertical-align:top}
+  .adm th{background:#faf5ea;white-space:nowrap}
+  .adm td.txt{min-width:260px;white-space:pre-wrap}
+  .adm .msg{margin:10px 0;color:var(--texto2)}
+  .adm .erro{color:#9b1c1c}
+  .adm .link-btn{background:none;border:0;padding:4px;font:inherit;font-size:14px;color:var(--ouro-escuro);text-decoration:underline;cursor:pointer}
+  .adm .equipe{display:grid;gap:18px}
+  .adm .cartao{background:#fff;border:1px solid var(--borda);border-radius:12px;padding:18px}
+  .adm .cartao h2{font-family:var(--serif);font-size:26px;margin:0 0 10px}
+  .adm .novo-link{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .adm .novo-link input{flex:1 1 280px;min-width:0;font-size:13px}
+  .adm .cartao table td,.adm .cartao table th{padding:8px 10px}
+  .adm select,.adm textarea{font:inherit;padding:10px 12px;border:1.5px solid var(--borda);border-radius:8px;background:#fff}
+  .adm textarea{min-height:90px;resize:vertical}
+  .adm .grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .adm .grade .campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .adm .grade .largo{grid-column:1/-1}
+  .adm .linha-botoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .adm .acoes{display:flex;gap:6px;flex-wrap:wrap}
+  .adm .acoes .btn{min-height:36px;padding:6px 10px;font-size:13px}
+  .adm .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#efe6d2;white-space:nowrap}
+  .adm .tag.bloq{background:#f6d6d6;color:#7a1414}
+  .adm .tag.dono{background:var(--preto);color:var(--ouro)}
+  .adm .aviso{background:#fff8e6;border:1px solid #e9d49a;border-radius:10px;padding:12px 14px;margin-top:12px;font-size:14px}
+  .adm .aviso code{font-size:15px;font-weight:700;user-select:all}
+  .adm img.mini{width:72px;height:48px;object-fit:cover;border-radius:6px;display:block}
+  .adm [data-painel] > section[hidden]{display:none}
+  /* Filtros */
+  .adm .filtros{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;background:#fff;border:1px solid var(--borda);border-radius:12px;padding:14px;margin-bottom:12px}
+  .adm .filtros .campo{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .adm .filtros .campo label{font-size:13px;font-weight:700}
+  .adm .filtros .campo.busca{grid-column:span 2}
+  .adm .filtros input,.adm .filtros select{padding:10px;font-size:16px;width:100%;box-sizing:border-box}
+  .adm .filtros .botoes{display:flex;gap:8px;grid-column:1/-1;flex-wrap:wrap}
+  .adm .filtros .botoes .btn{min-height:44px}
+  .adm .filtros [hidden]{display:none}
+  /* Situação dos pedidos */
+  .tag.est-aguardando{background:#fff1c9;color:#6b4a00}
+  .tag.est-mural{background:#dcefd8;color:#1f4d1c}
+  .tag.est-retirado{background:#ececec;color:#4a4a4a}
+  .tag.est-privado{background:#e6e1f3;color:#3b2f6b}
+  /* Linhas clicáveis e paginação */
+  .adm table.cartoes tbody tr{cursor:pointer}
+  .adm table.cartoes tbody tr:hover,.adm table.cartoes tbody tr:focus{background:#fbf7ee;outline:none}
+  .adm .paginacao{display:flex;gap:10px;align-items:center;justify-content:center;margin:14px 0;flex-wrap:wrap}
+  .adm .paginacao .btn{min-height:44px}
+  .adm .aviso-erro{padding:16px;color:#7a1414;background:#fdf0f0;border-radius:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .adm .perigo{color:#9b1c1c;border-color:#9b1c1c}
+  /* Ficha do registro */
+  dialog.ficha{border:0;border-radius:16px;padding:0;width:min(640px,calc(100vw - 24px));max-height:calc(100vh - 32px);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  dialog.ficha::backdrop{background:rgba(11,9,7,.55)}
+  dialog.ficha .topo-ficha{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #eee4d2;position:sticky;top:0;background:#fff}
+  dialog.ficha h2{font-family:var(--serif);font-size:24px;margin:0}
+  dialog.ficha .corpo{padding:6px 18px 4px}
+  dialog.ficha .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#efe6d2;white-space:nowrap}
+  dialog.ficha .ficha-dados{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;margin:8px 0 14px;font-size:15px}
+  dialog.ficha dt{font-weight:700;color:var(--texto2)}
+  dialog.ficha dd{margin:0;overflow-wrap:anywhere}
+  dialog.ficha dd.txt{white-space:pre-wrap}
+  dialog.ficha .rodape-ficha{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px 18px;border-top:1px solid #eee4d2;position:sticky;bottom:0;background:#fff}
+  dialog.ficha .rodape-ficha .btn{min-height:44px}
+  /* Celular: a tabela vira lista de cartões */
+  @media (max-width:720px){
+    .adm{padding:24px 12px 56px}
+    .adm h1{font-size:32px}
+    .adm .filtros .campo.busca{grid-column:1/-1}
+    .adm .tabela{background:transparent;border:0;overflow:visible}
+    .adm table.cartoes,.adm table.cartoes tbody,.adm table.cartoes tr,.adm table.cartoes td{display:block;width:100%;box-sizing:border-box}
+    .adm table.cartoes thead{display:none}
+    .adm table.cartoes tr{background:#fff;border:1px solid var(--borda);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+    .adm table.cartoes td{border:0;padding:4px 0;display:grid;grid-template-columns:110px 1fr;gap:8px;min-width:0}
+    .adm table.cartoes td::before{content:attr(data-rotulo);font-weight:700;color:var(--texto2);font-size:13px}
+    .adm table.cartoes td.txt{min-width:0}
+    .adm table.cartoes td > .tag{justify-self:start}
+    .adm table.cartoes td.acoes-linha{display:block;padding-top:8px}
+    .adm table.cartoes td.acoes-linha::before{content:none}
+    .adm table.cartoes td.acoes-linha .btn{width:100%;min-height:44px}
+    dialog.ficha .ficha-dados{grid-template-columns:1fr;gap:2px}
+    dialog.ficha dd{margin-bottom:8px}
+  }
+</style>
+</head>
+<body>
+<header class="adm-cab">
+  <div class="in">
+    <a href="/"><img src="/img/logo.png" alt="Comunidade Graça e Vida · voltar ao site"></a>
+    <button class="btn btn-claro btn-sm" type="button" data-sair hidden>Sair</button>
+  </div>
+</header>
+<main class="adm">
+  <div class="titulo so-login" data-titulo>
+    <h1>Área da equipe</h1>
+    <p class="msg" data-quem>Carregando…</p>
+  </div>
+
+  <form class="login" data-login hidden>
+    <label class="lbl" for="ad-email">E-mail</label>
+    <input id="ad-email" name="email" type="email" autocomplete="username" required>
+    <label class="lbl" for="ad-senha">Senha</label>
+    <input id="ad-senha" name="senha" type="password" autocomplete="current-password" required minlength="8">
+    <button class="btn btn-preto" type="submit">Entrar</button>
+    <button class="link-btn" type="button" data-ir-cadastro hidden>Ainda não tenho conta</button>
+    <p class="msg erro" data-erro hidden></p>
+  </form>
+
+  <!-- Só aparece com um link de convite válido (?convite=...) -->
+  <form class="login" data-cadastro hidden>
+    <label class="lbl" for="cd-nome">Seu nome</label>
+    <input id="cd-nome" name="nome" type="text" autocomplete="name" required maxlength="80">
+    <label class="lbl" for="cd-email">E-mail</label>
+    <input id="cd-email" name="email" type="email" autocomplete="username" required>
+    <label class="lbl" for="cd-senha">Crie uma senha (mínimo 8 caracteres)</label>
+    <input id="cd-senha" name="senha" type="password" autocomplete="new-password" required minlength="8">
+    <button class="btn btn-preto" type="submit">Criar minha conta da equipe</button>
+    <button class="link-btn" type="button" data-ir-login>Já tenho conta, quero entrar</button>
+    <p class="msg erro" data-erro-cadastro hidden></p>
+  </form>
+
+  <section data-painel hidden>
+    <div class="abas" data-abas></div>
+    <p class="msg" data-status></p>
+
+    <!-- Cadastros: pedidos de oração, visitantes, inscrições -->
+    <section data-sec="tabela" hidden>
+      <form class="filtros" data-filtros>
+        <div class="campo busca"><label for="f-q">Buscar</label><input id="f-q" name="q" type="search" placeholder="Nome ou texto" maxlength="80"></div>
+        <div class="campo"><label for="f-de">De</label><input id="f-de" name="de" type="date"></div>
+        <div class="campo"><label for="f-ate">Até</label><input id="f-ate" name="ate" type="date"></div>
+        <div class="campo" data-so="oracao"><label for="f-vis">Visibilidade</label>
+          <select id="f-vis" name="visibilidade"><option value="">Todas</option><option value="Mural">Mural</option><option value="Privado">Privado</option></select></div>
+        <div class="campo" data-so="oracao"><label for="f-est">Situação</label>
+          <select id="f-est" name="estado"><option value="">Todas</option><option value="aguardando">Aguardando aprovação</option><option value="no_mural">No mural</option><option value="retirado">Retirado do mural</option><option value="privado">Privado</option></select></div>
+        <div class="campo" data-so="oracao"><label for="f-ori">Origem</label>
+          <select id="f-ori" name="origem"><option value="">Todas</option><option value="oracao">Formulário de oração</option><option value="visitante">Cadastro de visitante</option></select></div>
+        <div class="botoes">
+          <button class="btn btn-preto btn-sm" type="submit">Filtrar</button>
+          <button class="btn btn-borda btn-sm" type="reset">Limpar filtros</button>
+          <button class="btn btn-ouro btn-sm" type="button" data-exportar hidden>Exportar CSV</button>
+        </div>
+      </form>
+      <div class="tabela" data-tabela></div>
+      <nav class="paginacao" data-paginacao aria-label="Páginas" hidden></nav>
+    </section>
+
+    <!-- Eventos -->
+    <section class="equipe" data-sec="eventos" hidden>
+      <form class="cartao" data-form-evento>
+        <h2 data-ev-titulo-form>Novo evento</h2>
+        <input type="hidden" name="id">
+        <div class="grade">
+          <div class="campo largo"><label class="lbl" for="ev-t">Nome do evento *</label><input id="ev-t" name="titulo" required maxlength="120"></div>
+          <div class="campo"><label class="lbl" for="ev-d">Data *</label><input id="ev-d" name="data" type="date" required></div>
+          <div class="campo"><label class="lbl" for="ev-h">Horário</label><input id="ev-h" name="horario" maxlength="40" placeholder="19h30"></div>
+          <div class="campo"><label class="lbl" for="ev-l">Local</label><input id="ev-l" name="local" maxlength="160" placeholder="Rua Independência, 259"></div>
+          <div class="campo"><label class="lbl" for="ev-v">Vagas</label><input id="ev-v" name="vagas" type="number" min="1" placeholder="Sem limite"></div>
+          <div class="campo largo"><label class="lbl" for="ev-ds">Descrição</label><textarea id="ev-ds" name="descricao" maxlength="1000"></textarea></div>
+          <div class="campo"><label class="lbl" for="ev-a">Arte (JPG, PNG ou WebP, até 5 MB; melhor na horizontal)</label><input id="ev-a" name="arte" type="file" accept="image/jpeg,image/png,image/webp"></div>
+          <div class="campo" style="justify-content:flex-end;gap:10px"><label class="check"><input type="checkbox" name="inscricao" checked> Pedir inscrição <span class="opc">(para saber quantos vêm)</span></label><label class="check"><input type="checkbox" name="publicado" checked> Mostrar no site</label></div>
+        </div>
+        <div class="linha-botoes">
+          <button class="btn btn-preto btn-sm" type="submit">Salvar evento</button>
+          <button class="btn btn-borda btn-sm" type="button" data-ev-cancelar hidden>Cancelar edição</button>
+        </div>
+      </form>
+      <div class="cartao"><h2>Eventos</h2><div class="tabela" data-lista-eventos></div></div>
+    </section>
+
+    <!-- Equipe e permissões (só super admin) -->
+    <section class="equipe" data-sec="equipe" hidden>
+      <div class="cartao">
+        <h2>Criar usuário</h2>
+        <p class="msg">A conta é criada na hora com uma senha provisória. Passe o e-mail e a senha para a pessoa.</p>
+        <form data-form-usuario>
+          <div class="grade">
+            <div class="campo"><label class="lbl" for="us-n">Nome *</label><input id="us-n" name="nome" required maxlength="80"></div>
+            <div class="campo"><label class="lbl" for="us-e">E-mail *</label><input id="us-e" name="email" type="email" required></div>
+            <div class="campo"><label class="lbl" for="us-v">Nível *</label><select id="us-v" name="nivel" data-niveis></select></div>
+            <div class="campo"><label class="lbl" for="us-s">Senha provisória *</label><input id="us-s" name="senha" required minlength="8"></div>
+          </div>
+          <div class="linha-botoes"><button class="btn btn-preto btn-sm" type="submit">Criar usuário</button></div>
+        </form>
+        <div class="aviso" data-aviso-usuario hidden></div>
+      </div>
+      <div class="cartao">
+        <h2>Convidar por link</h2>
+        <p class="msg">A pessoa cria a própria conta pelo link. Vale 7 dias e uma vez só.</p>
+        <div class="linha-botoes">
+          <label class="lbl" for="cv-n">Nível</label><select id="cv-n" data-niveis data-nivel-convite></select>
+          <button class="btn btn-preto btn-sm" type="button" data-gerar>Criar link de cadastro</button>
+        </div>
+        <div class="novo-link" data-novo-link hidden>
+          <input type="text" readonly data-link aria-label="Link de cadastro">
+          <button class="btn btn-ouro btn-sm" type="button" data-copiar>Copiar</button>
+        </div>
+      </div>
+      <div class="cartao"><h2>Usuários e permissões</h2><div class="tabela" data-membros></div></div>
+      <div class="cartao"><h2>Links criados</h2><div class="tabela" data-convites></div></div>
+    </section>
+
+    <!-- Histórico -->
+    <section data-sec="historico" hidden>
+      <div class="tabela" data-historico></div>
+    </section>
+  </section>
+</main>
+
+<!-- Ficha de um registro: abre ao tocar na linha ou pelo link /equipe/<aba>/<nº> -->
+<dialog class="ficha" data-ficha aria-label="Detalhes do registro">
+  <div class="topo-ficha"><h2>Detalhes</h2><button class="btn btn-borda btn-sm" type="button" data-ficha-fechar>Fechar</button></div>
+  <div class="corpo" data-ficha-corpo></div>
+  <div class="rodape-ficha" data-ficha-acoes></div>
+</dialog>
+<script src="/js/config.js"></script>
+<script type="module" src="/js/admin.js"></script>
+</body>
+</html>

@@ -17,6 +17,8 @@ export default defineConfig({
         SUPER_ADMIN_IDS: process.env.SUPER_ADMIN_IDS!,
         // O segredo do Realtime não é injetado nas Functions (e o prefixo NEON_ é reservado)
         REALTIME_SECRET: process.env.NEON_REALTIME_SECRET!,
+        // Só nas branches de teste (Preview da Vercel); em produção fica vazio
+        ...(process.env.ORIGENS_EXTRA ? { ORIGENS_EXTRA: process.env.ORIGENS_EXTRA } : {}),
       },
     },
   },

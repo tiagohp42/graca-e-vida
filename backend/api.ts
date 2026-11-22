@@ -32,7 +32,9 @@ import { neon } from "files-sdk/neon";
 import { createHash, randomBytes } from "node:crypto";
 
 const FUSO = "America/Sao_Paulo";
-const ORIGENS = [/^https:\/\/(www\.)?gracaevida\.com$/, /^https:\/\/tiagohp42\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
+const ORIGENS = [/^https:\/\/(www\.)?gracaevida\.com$/, /^https:\/\/tiagohp42\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  // Origens extras só para branches de teste (ex.: o Preview da Vercel), separadas por vírgula
+  ...(process.env.ORIGENS_EXTRA || "").split(",").map((o) => o.trim()).filter(Boolean).map((o) => new RegExp("^" + o.replace(/[.]/g, "\\.").replace(/\*/g, "[a-z0-9-]+") + "$"))];
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 attachDatabasePool(pool);
@@ -206,31 +208,93 @@ async function registrar(a: Admin, acao: string, alvo?: string | null, detalhes?
 
 const hashToken = (t: string) => createHash("sha256").update(t).digest("hex");
 
-// O que cada nível enxerga de cada tabela
-function consulta(tabela: string, a: Admin): string | null {
+// O que cada nível enxerga de cada tabela, com filtros e paginação.
+// Os filtros entram sempre como parâmetros ($1, $2...), nunca no texto do SQL.
+type Filtros = { de?: string; ate?: string; q?: string; visibilidade?: string; estado?: string; origem?: string; status?: string; id?: string };
+type Consulta = { colunas: string; from: string; where: string[]; params: unknown[] };
+
+const DIA_SP = "(criado_em AT TIME ZONE 'America/Sao_Paulo')::date";
+const ESTADO_PEDIDO = `CASE WHEN visibilidade = 'Privado' THEN 'privado' WHEN aprovado THEN 'no_mural'
+  WHEN retirado_em IS NOT NULL THEN 'retirado' ELSE 'aguardando' END`;
+
+function consulta(tabela: string, a: Admin, f: Filtros = {}): Consulta | null {
   if (!a.perm.tabelas.includes(tabela)) return null;
+  const q: Consulta = { colunas: "*", from: "", where: [], params: [] };
+  const p = (v: unknown) => { q.params.push(v); return "$" + q.params.length; };
+  const busca = (campos: string[]) => {
+    const termo = txt(f.q, 80);
+    if (termo) { const x = p("%" + termo.replace(/[%_\\]/g, "\\$&") + "%"); q.where.push("(" + campos.map((c) => `${c} ILIKE ${x}`).join(" OR ") + ")"); }
+  };
   if (tabela === "visitantes") {
-    return a.nivel === "lider"
-      ? "SELECT id, criado_em, nome, whatsapp, bairro, quer_celula, melhor_horario, status FROM visitantes WHERE quer_celula ORDER BY criado_em DESC LIMIT 500"
-      : "SELECT * FROM visitantes ORDER BY criado_em DESC LIMIT 500";
-  }
-  if (tabela === "oracao") {
-    return a.nivel === "editor"
-      ? "SELECT id, criado_em, autor_publico AS nome, pedido, visibilidade, aprovado, oracoes, origem FROM pedidos_oracao WHERE visibilidade = 'Mural' ORDER BY criado_em DESC LIMIT 500"
-      : "SELECT * FROM pedidos_oracao ORDER BY criado_em DESC LIMIT 500";
-  }
-  if (tabela === "inscricoes") return "SELECT * FROM inscricoes ORDER BY criado_em DESC LIMIT 500";
-  return null;
+    q.from = "visitantes";
+    if (a.nivel === "lider") {
+      q.colunas = "id, criado_em, nome, whatsapp, bairro, quer_celula, melhor_horario, status";
+      q.where.push("quer_celula");
+      busca(["nome", "bairro"]);
+    } else {
+      busca(["nome", "whatsapp", "email", "bairro", "mensagem", "pedido"]);
+    }
+    if (f.status) q.where.push("status = " + p(txt(f.status, 30)));
+  } else if (tabela === "oracao") {
+    q.from = "pedidos_oracao";
+    if (a.nivel === "editor") {
+      q.colunas = `id, criado_em, autor_publico AS nome, anonimo, pedido, visibilidade, aprovado, oracoes, origem, retirado_em, ${ESTADO_PEDIDO} AS estado`;
+      q.where.push("visibilidade = 'Mural'");
+      busca(["autor_publico", "pedido"]);
+    } else {
+      q.colunas = `*, ${ESTADO_PEDIDO} AS estado`;
+      busca(["nome", "autor_publico", "pedido"]);
+    }
+    if (f.visibilidade === "Mural" || f.visibilidade === "Privado") q.where.push("visibilidade = " + p(f.visibilidade));
+    if (f.estado && ["aguardando", "no_mural", "retirado", "privado"].includes(f.estado)) q.where.push(`(${ESTADO_PEDIDO}) = ` + p(f.estado));
+    if (f.origem === "oracao" || f.origem === "visitante") q.where.push("origem = " + p(f.origem));
+  } else if (tabela === "inscricoes") {
+    q.from = "inscricoes";
+    busca(["nome", "evento", "whatsapp", "email", "obs"]);
+  } else return null;
+  if (data(f.de)) q.where.push(`${DIA_SP} >= ` + p(data(f.de)));
+  if (data(f.ate)) q.where.push(`${DIA_SP} <= ` + p(data(f.ate)));
+  if (f.id) q.where.push("id = " + p(f.id));
+  return q;
 }
 
+const ondeSql = (q: Consulta) => (q.where.length ? " WHERE " + q.where.join(" AND ") : "");
+const filtrosDe = (c: Context): Filtros => {
+  const g = (k: string) => c.req.query(k) || undefined;
+  return { de: g("de"), ate: g("ate"), q: g("q"), visibilidade: g("visibilidade"), estado: g("estado"), origem: g("origem"), status: g("status") };
+};
+const POR_PAGINA = 20;
+
+/* CSV para o Excel brasileiro: UTF-8 com BOM, separado por ponto e vírgula, datas dd/mm/aaaa hh:mm */
+const ROTULOS_CSV: Record<string, string> = {
+  id: "Nº", criado_em: "Data", nome: "Nome", anonimo: "Anônimo", autor_publico: "Nome no mural", pedido: "Pedido",
+  visibilidade: "Visibilidade", aprovado: "No mural", oracoes: "Orações", origem: "Origem", retirado_em: "Retirado do mural em",
+  estado: "Situação", whatsapp: "WhatsApp", email: "E-mail", nascimento: "Nascimento", bairro: "Bairro",
+  quer_visita: "Quer visita", quer_celula: "Quer célula", quer_batismo: "Quer batismo", quer_jesus: "Quer conhecer Jesus",
+  quer_oracao: "Quer oração", endereco: "Endereço", melhor_horario: "Melhor horário", mensagem: "Mensagem",
+  consentimento: "Autorizou contato", status: "Status", evento: "Evento", pessoas: "Pessoas", obs: "Observações", confirmado: "Confirmado",
+};
+export const VALORES: Record<string, Record<string, string>> = {
+  origem: { oracao: "Formulário de oração", visitante: "Cadastro de visitante" },
+  estado: { aguardando: "Aguardando aprovação", no_mural: "No mural", retirado: "Retirado do mural", privado: "Privado" },
+};
+const dataHora = new Intl.DateTimeFormat("pt-BR", { timeZone: FUSO, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const soData = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
+
 function csv(rows: Record<string, unknown>[]): string {
-  if (rows.length === 0) return "";
+  if (rows.length === 0) return "﻿Nenhum registro com esses filtros.";
   const cols = Object.keys(rows[0]);
-  const cel = (v: unknown) => {
-    const s = v instanceof Date ? v.toISOString() : v == null ? "" : String(v);
-    return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  const valor = (k: string, v: unknown) => {
+    if (v == null) return k === "nome" ? "Anônimo" : "";
+    if (v instanceof Date) return k === "nascimento" ? soData.format(v) : dataHora.format(v).replace(",", "");
+    if (typeof v === "boolean") return v ? "Sim" : "Não";
+    return VALORES[k]?.[String(v)] ?? String(v);
   };
-  return "﻿" + [cols.join(","), ...rows.map((r) => cols.map((k) => cel(r[k])).join(","))].join("\n");
+  const cel = (k: string, v: unknown) => {
+    const s = valor(k, v);
+    return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  return "﻿" + [cols.map((k) => ROTULOS_CSV[k] || k).join(";"), ...rows.map((r) => cols.map((k) => cel(k, r[k])).join(";"))].join("\r\n");
 }
 
 /* ---------- eventos ---------- */
@@ -517,10 +581,25 @@ app.post("/admin/eventos/:id/excluir", podeEventos, async (c) => {
 
 /* ---------- cadastros ---------- */
 app.get("/admin/:tabela", async (c) => {
-  const sql = consulta(c.req.param("tabela"), quem(c));
-  if (!sql) return c.json({ ok: false, erro: "sem-permissao" }, 403);
-  const { rows } = await pool.query(sql);
-  return c.json({ ok: true, linhas: rows });
+  const q = consulta(c.req.param("tabela") || "", quem(c), filtrosDe(c));
+  if (!q) return c.json({ ok: false, erro: "sem-permissao" }, 403);
+  const pagina = Math.max(1, parseInt(c.req.query("pagina") || "1", 10) || 1);
+  const onde = ondeSql(q);
+  const [{ rows }, { rows: [conta] }] = await Promise.all([
+    pool.query(`SELECT ${q.colunas} FROM ${q.from}${onde} ORDER BY criado_em DESC, id DESC LIMIT ${POR_PAGINA} OFFSET ${(pagina - 1) * POR_PAGINA}`, q.params),
+    pool.query(`SELECT count(*)::int AS total FROM ${q.from}${onde}`, q.params),
+  ]);
+  return c.json({ ok: true, linhas: rows, total: conta.total, pagina, paginas: Math.max(1, Math.ceil(conta.total / POR_PAGINA)), porPagina: POR_PAGINA });
+});
+
+// Um registro só (links diretos /equipe/pedidos/ID etc.), com as mesmas regras de acesso da lista
+app.get("/admin/:tabela/:id", async (c) => {
+  const id = c.req.param("id") || "";
+  if (!/^\d+$/.test(id)) return c.json({ ok: false, erro: "id-invalido" }, 400);
+  const q = consulta(c.req.param("tabela") || "", quem(c), { id });
+  if (!q) return c.json({ ok: false, erro: "sem-permissao" }, 403);
+  const { rows } = await pool.query(`SELECT ${q.colunas} FROM ${q.from}${ondeSql(q)}`, q.params);
+  return rows[0] ? c.json({ ok: true, linha: rows[0] }) : c.json({ ok: false, erro: "nao-encontrado" }, 404);
 });
 
 app.post("/admin/oracao/:id", async (c) => {
@@ -531,9 +610,10 @@ app.post("/admin/oracao/:id", async (c) => {
   const d = await c.req.json<{ aprovado?: boolean; visibilidade?: string }>().catch(() => ({}) as Record<string, unknown>);
   const vis = d.visibilidade === "Mural" || d.visibilidade === "Privado" ? d.visibilidade : null;
   const apr = typeof d.aprovado === "boolean" ? d.aprovado : null;
-  // O editor só mexe em pedidos do mural
+  // O editor só mexe em pedidos do mural. Tirar do mural guarda a data (estado "Retirado do mural").
   const { rows } = await pool.query(
-    `UPDATE pedidos_oracao SET aprovado = COALESCE($2, aprovado), visibilidade = COALESCE($3, visibilidade)
+    `UPDATE pedidos_oracao SET aprovado = COALESCE($2, aprovado), visibilidade = COALESCE($3, visibilidade),
+       retirado_em = CASE WHEN $2 IS FALSE AND aprovado THEN now() WHEN $2 IS TRUE THEN NULL ELSE retirado_em END
      WHERE id = $1 AND ($4 OR visibilidade = 'Mural') RETURNING id, autor_publico, aprovado`,
     [id, apr, a.nivel === "editor" ? null : vis, a.nivel !== "editor"],
   );
@@ -542,16 +622,34 @@ app.post("/admin/oracao/:id", async (c) => {
   return c.json({ ok: true, linha: rows[0] });
 });
 
+// Excluir de vez (só Super Admin e Admin). Fica no histórico sem o conteúdo do registro.
+const TABELA_SQL: Record<string, { tabela: string; nome: string; rotulo: string }> = {
+  oracao: { tabela: "pedidos_oracao", nome: "COALESCE(autor_publico, 'Anônimo')", rotulo: "pedido de oração" },
+  visitantes: { tabela: "visitantes", nome: "nome", rotulo: "visitante" },
+  inscricoes: { tabela: "inscricoes", nome: "nome || ' · ' || evento", rotulo: "inscrição" },
+};
+app.post("/admin/:tabela/:id/excluir", async (c) => {
+  const a = quem(c);
+  const t = TABELA_SQL[c.req.param("tabela") || ""];
+  if (!t || !(a.super || a.nivel === "admin") || !a.perm.tabelas.includes(c.req.param("tabela") || "")) return c.json({ ok: false, erro: "sem-permissao" }, 403);
+  const id = c.req.param("id") || "";
+  if (!/^\d+$/.test(id)) return c.json({ ok: false, erro: "id-invalido" }, 400);
+  const { rows } = await pool.query(`DELETE FROM ${t.tabela} WHERE id = $1 RETURNING ${t.nome} AS nome`, [id]);
+  if (!rows[0]) return c.json({ ok: false, erro: "nao-encontrado" }, 404);
+  await registrar(a, "excluiu " + t.rotulo, rows[0].nome, { id });
+  return c.json({ ok: true });
+});
+
 app.post("/admin/exportar/:tabela", async (c) => {
   const a = quem(c);
-  const nome = c.req.param("tabela");
-  const sql = consulta(nome, a);
-  if (!sql || !a.perm.exportar) return c.json({ ok: false, erro: "sem-permissao" }, 403);
-  const { rows } = await pool.query(sql);
+  const nome = c.req.param("tabela") || "";
+  const q = consulta(nome, a, filtrosDe(c));
+  if (!q || !a.perm.exportar) return c.json({ ok: false, erro: "sem-permissao" }, 403);
+  const { rows } = await pool.query(`SELECT ${q.colunas} FROM ${q.from}${ondeSql(q)} ORDER BY criado_em DESC, id DESC LIMIT 5000`, q.params);
   const chave = `exportacoes/${nome}/${new Date().toISOString().replace(/[:.]/g, "-")}.csv`;
   await files.upload(chave, csv(rows), { contentType: "text/csv; charset=utf-8" });
   await pool.query("INSERT INTO exportacoes (tabela, chave, linhas, feito_por) VALUES ($1,$2,$3,$4)", [nome, chave, rows.length, a.email]);
-  await registrar(a, "exportou CSV", nome, { linhas: rows.length });
+  await registrar(a, "exportou CSV", nome, { linhas: rows.length, filtros: filtrosDe(c) });
   const url = await files.url(chave, { expiresIn: 600 });
   return c.json({ ok: true, chave, linhas: rows.length, url });
 });
